@@ -107,8 +107,8 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
           gravity: 0.2,
           shouldLoop: false,
           colors: const [
-            Color(0xFF7C4DFF),
-            Color(0xFFE040FB),
+            Color(0xFF1FB45C),
+            Color(0xFF48E37F),
             Color(0xFFFFB300),
             Color(0xFF4CAF50),
           ],
@@ -209,7 +209,7 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                             style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                   vertical: AppSpacing.md + 2),
-                              backgroundColor: const Color(0xFF7C4DFF),
+                              backgroundColor: const Color(0xFF1FB45C),
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppRadius.md),

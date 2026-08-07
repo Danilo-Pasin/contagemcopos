@@ -10,34 +10,34 @@ class AppTheme {
   const AppTheme._();
 
   // Marcas de cor
-  static const Color primary = Color(0xFF7C4DFF);
-  static const Color secondary = Color(0xFFE040FB);
+  static const Color primary = Color(0xFF1FB45C);
+  static const Color secondary = Color(0xFF48E37F);
   static const Color accent = Color(0xFFFFB300);
 
   static const FlexSchemeColor _light = FlexSchemeColor(
-    primary: Color(0xFF6C3CE0),
-    primaryContainer: Color(0xFFE9DEFF),
-    secondary: Color(0xFFC218C0),
-    secondaryContainer: Color(0xFFFFD6F4),
+    primary: Color(0xFF1E8E4B),
+    primaryContainer: Color(0xFFBFF5D3),
+    secondary: Color(0xFF37A16E),
+    secondaryContainer: Color(0xFFC9EFDB),
     tertiary: Color(0xFFE08A00),
     tertiaryContainer: Color(0xFFFFE0A8),
-    appBarColor: Color(0xFFE9DEFF),
+    appBarColor: Color(0xFFDCF3E6),
     error: Color(0xFFBA1A1A),
   );
 
   static const FlexSchemeColor _dark = FlexSchemeColor(
-    primary: Color(0xFFCFBCFF),
-    primaryContainer: Color(0xFF4A29A8),
-    secondary: Color(0xFFFFABEE),
-    secondaryContainer: Color(0xFF821980),
+    primary: Color(0xFF7FE98E),
+    primaryContainer: Color(0xFF135A33),
+    secondary: Color(0xFF9CE6B6),
+    secondaryContainer: Color(0xFF226A41),
     tertiary: Color(0xFFFFB873),
     tertiaryContainer: Color(0xFF795600),
-    appBarColor: Color(0xFF161322),
+    appBarColor: Color(0xFF0F1E15),
     error: Color(0xFFFFB4AB),
   );
 
   static ThemeData light() => FlexThemeData.light(
-        scheme: FlexScheme.deepPurple,
+        scheme: FlexScheme.green,
         colors: _light,
         surfaceMode: FlexSurfaceMode.highBackgroundLowScaffold,
         blendLevel: 18,
@@ -71,7 +71,7 @@ class AppTheme {
       );
 
   static ThemeData dark() => FlexThemeData.dark(
-        scheme: FlexScheme.deepPurple,
+        scheme: FlexScheme.green,
         colors: _dark,
         surfaceMode: FlexSurfaceMode.highScaffoldLowSurface,
         blendLevel: 26,

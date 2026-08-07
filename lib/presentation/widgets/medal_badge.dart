@@ -84,10 +84,10 @@ class TitleBadge extends StatelessWidget {
         vertical: compact ? 4 : 6,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF7C4DFF).withValues(alpha: 0.12),
+        color: const Color(0xFF1FB45C).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(
-          color: const Color(0xFF7C4DFF).withValues(alpha: 0.3),
+          color: const Color(0xFF1FB45C).withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -100,7 +100,7 @@ class TitleBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: compact ? 11 : 12,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF7C4DFF),
+              color: const Color(0xFF1FB45C),
             ),
           ),
         ],

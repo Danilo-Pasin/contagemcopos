@@ -18,7 +18,7 @@ class HomePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final identity = ref.watch(identityProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+    final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
 
     return Scaffold(
       body: Container(
@@ -173,7 +173,7 @@ class _FeaturePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+    final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -225,7 +225,7 @@ class _CodeEntryCardState extends State<_CodeEntryCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+    final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
       child: TextField(

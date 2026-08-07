@@ -84,14 +84,14 @@ class AppAvatar extends StatelessWidget {
 
   Widget _placeholder(String initial) {
     return Container(
-      color: const Color(0xFF7C4DFF).withValues(alpha: 0.2),
+      color: const Color(0xFF1FB45C).withValues(alpha: 0.2),
       alignment: Alignment.center,
       child: Text(
         initial,
         style: TextStyle(
           fontSize: radius * 0.9,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF7C4DFF),
+          color: const Color(0xFF1FB45C),
         ),
       ),
     );

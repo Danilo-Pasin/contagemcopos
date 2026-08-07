@@ -124,8 +124,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               mainAxisExtent: 108,
             ),
             delegate: SliverChildListDelegate([
-              _MetricCard('🍺', 'Total', '$total', const Color(0xFF7C4DFF)),
-              _MetricCard('📊', 'Média/pessoa', media.toStringAsFixed(1), const Color(0xFFE040FB)),
+              _MetricCard('🍺', 'Total', '$total', const Color(0xFF1FB45C)),
+              _MetricCard('📊', 'Média/pessoa', media.toStringAsFixed(1), const Color(0xFF48E37F)),
               _MetricCard('👑', 'Mais ativo', mostActive.name.split(' ').first, const Color(0xFFFFB300)),
               _MetricCard('📸', 'Fotos', '$photoCount', const Color(0xFF4CAF50)),
             ]),

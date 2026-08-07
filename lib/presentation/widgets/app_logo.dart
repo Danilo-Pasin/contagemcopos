@@ -23,14 +23,14 @@ class AppLogo extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF7C4DFF),
-            const Color(0xFFE040FB),
+            const Color(0xFF1FB45C),
+            const Color(0xFF48E37F),
           ],
         ),
         borderRadius: BorderRadius.circular(size * 0.26),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C4DFF).withValues(alpha: 0.5),
+            color: const Color(0xFF1FB45C).withValues(alpha: 0.5),
             blurRadius: 40,
             offset: const Offset(0, 16),
           ),

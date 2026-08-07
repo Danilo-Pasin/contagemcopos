@@ -53,7 +53,7 @@ class AppGradients {
   static const LinearGradient primary = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF7C4DFF), Color(0xFFE040FB)],
+    colors: [Color(0xFF1FB45C), Color(0xFF48E37F)],
   );
 
   static const LinearGradient gold = LinearGradient(
@@ -84,6 +84,6 @@ class AppGradients {
   static const LinearGradient heroLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFF3EDFF), Color(0xFFE4F0FF)],
+    colors: [Color(0xFFE6FBF0), Color(0xFFDFF1E6)],
   );
 }

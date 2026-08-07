@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0B0E14",
-    "theme_color": "#7C4DFF",
+    "theme_color": "#1FB45C",
     "description": "Competição social de bebidas entre amigos. Crie grupos, registre, suba no ranking.",
     "orientation": "portrait-primary",
     "categories": ["social", "entertainment", "lifestyle"],
