@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:postgrest/postgrest.dart';
 import '../../domain/entities/group_entity.dart';
 import '../../domain/entities/participant_entity.dart';
 import '../models/group_model.dart';
@@ -111,31 +112,34 @@ class GroupRepository {
 
   /// Garante que existe uma conta (name + password).
   ///
-  /// - Se a conta com esse nome já existe e a senha bate, devolve o id.
+  /// A senha nunca trafega/é lida diretamente: o banco só devolve o id
+  /// (via RPC `ctg_login_account`/`ctg_create_account`, que compara hashes).
+  ///
+  /// - Se a conta existe e a senha bate, devolve o id.
   /// - Se a conta não existe, cria e devolve o id.
-  /// - Se a conta existe mas a senha difere, lança erro.
+  /// - Se a conta existe mas a senha difere (ou acesso negado), lança erro.
   Future<String> ensureAccount({
     required String name,
     required String password,
   }) async {
     final trimmed = name.trim();
-    final existing = await _client
-        .from('ctg_accounts')
-        .select('id,password')
-        .eq('name', trimmed)
-        .maybeSingle();
-    if (existing != null) {
-      if (existing['password'].toString() != password) {
-        throw Exception('Senha incorreta para "$trimmed". Se é novo, use outro nome.');
-      }
-      return existing['id'] as String;
+
+    final loggedId = await _client.rpc('ctg_login_account', params: {
+      'p_name': trimmed,
+      'p_password': password,
+    });
+    if (loggedId != null) return loggedId as String;
+
+    try {
+      final createdId = await _client.rpc('ctg_create_account', params: {
+        'p_name': trimmed,
+        'p_password': password,
+      });
+      return createdId as String;
+    } on PostgrestException catch (e) {
+      throw Exception(e.message ??
+          'Senha incorreta para "$trimmed". Se é novo, use outro nome.');
     }
-    final ins = await _client
-        .from('ctg_accounts')
-        .insert({'name': trimmed, 'password': password})
-        .select('id')
-        .single();
-    return ins['id'] as String;
   }
 
   /// Lista participantes com total de bebidas (via ctg_ranking_view).

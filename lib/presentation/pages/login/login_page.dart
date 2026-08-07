@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../core/utils/app_validator.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/identity_provider.dart';
 import '../../widgets/app_buttons.dart';
@@ -41,9 +42,11 @@ class _LoginGroupPageState extends ConsumerState<LoginGroupPage> {
   }
 
   bool get _valid =>
-      _codeCtrl.text.trim().length >= 3 &&
-      _nameCtrl.text.trim().isNotEmpty &&
-      _passCtrl.text.length >= 5 &&
+      AppValidator.canSubmitLogin(
+        code: _codeCtrl.text,
+        name: _nameCtrl.text,
+        password: _passCtrl.text,
+      ) &&
       !_busy;
 
   Future<void> _login() async {
