@@ -34,6 +34,12 @@ class GroupEntity {
   bool get isEnded => status == GroupStatus.ended;
   bool get isArchived => status == GroupStatus.archived;
 
+  /// Competição aceitando novos registros/entradas: precisa estar `active` e
+  /// ainda dentro do prazo. Espelha a regra das políticas RLS do backend
+  /// (`status = 'active' AND end_date > now()`).
+  bool acceptsEntries({DateTime? now}) =>
+      isActive && (now ?? DateTime.now()).isBefore(endDate);
+
   /// Link público de entrada no grupo.
   String get shareLink => '/g/$code';
 

@@ -230,3 +230,40 @@ _refreshAll() — catch (_) {} silencioso	MÉDIO — engole exceções sem log	�
   de 1 min para o encerramento (evitar rebuilds frequentes o resto do tempo).
 
 ---
+# 12. CHANGELOG — 2026-08-07 (rodada 5 — fim de competição imposto no backend)
+
+## ✅ 12.1 Políticas RLS — trava real após o prazo (server-side)
+Antes, o "fim da competição" só desabilitava os botões no front (trava
+cosmética); o backend aceitava bebida/foto/entrada mesmo encerrado. Agora o
+Postgres impõe:
+- **`ctg_drinks` (insert):** só aceita se o autor for participante do grupo E o
+  grupo estiver `active` com `end_date > now()`.
+- **`ctg_photos` (insert):** mesma condição.
+- **`ctg_participants` (insert):** entrada só enquanto o grupo estiver `active`
+  e no prazo.
+- Leituras continuam liberadas (RLS `true`): tudo segue visível.
+
+Migração `enforce_active_competition_insert` aplicada; políticas verificadas via
+`pg_policy` (with_check) e sem novos avisos no advisor.
+
+## 12.2 Frontend — mensagens amigáveis e regra centralizada
+- `group_home_page.dart`: falha em +1 bebida / +foto mostra snack
+  "a competição já encerrou" (antes virava erro genérico/raw).
+- `join_group_page.dart`:
+  - Em `_load`, pessoa nova vê "Essa competição já encerrou. Só é possível
+    visualizar.", mas **membro já existente continua entrando** (modo leitura).
+  - Em `_join`, bloqueio aplicado apenas ao inserir participante novo (membro
+    que retorna não é barrado).
+- `group_entity.dart`: novo getter `acceptsEntries({DateTime? now})`
+  (`isActive && now < endDate`), espelha a regra RLS e passou a ser usado nos 3
+  pontos (home e join), removendo a duplicação inline.
+
+## 12.3 Testes
+- `group_session_state_test.dart`: novos 5 testes para `acceptsEntries`
+  (dentro do prazo, exatamente no prazo, após prazo, encerrado e arquivado).
+
+## Verificação
+- `flutter test` → ✅ 86/86 passam.
+- `flutter build web --release` → ✅ compila.
+
+---

@@ -71,9 +71,19 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
       builder: (_) => const _DrinkTypeSheet(),
     );
     if (!mounted || res == null) return;
-    await ref
-        .read(groupSessionProvider(code).notifier)
-        .addDrink(drinkType: res.type?.id);
+    try {
+      await ref
+          .read(groupSessionProvider(code).notifier)
+          .addDrink(drinkType: res.type?.id);
+    } catch (e) {
+      if (_mounted) {
+        context.showSnack(
+          'Não foi possível registrar: a competição já encerrou.',
+          isError: true,
+        );
+      }
+      debugPrint('[GroupHome] falha ao adicionar bebida: $e');
+    }
   }
 
   Future<void> _addPhoto(String code) async {
@@ -92,7 +102,13 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
       await ref.read(groupSessionProvider(code).notifier).addPhoto(url);
       if (_mounted) context.showSnack('Foto adicionada ao álbum! 📸');
     } catch (e) {
-      if (_mounted) context.showSnack('Erro: $e', isError: true);
+      if (_mounted) {
+        context.showSnack(
+          'Não foi possível adicionar foto: a competição já encerrou.',
+          isError: true,
+        );
+      }
+      debugPrint('[GroupHome] falha ao adicionar foto: $e');
     }
   }
 
@@ -113,8 +129,7 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     final progress = TitleSystem.progressToNext(me.totalDrinks, maxGoal);
     // Desafio encerrado quando o status é 'ended' OU o prazo já passou:
     // a partir daí só leitura (sem +1 bebida / foto).
-    final running = session.group!.isActive &&
-        DateTime.now().isBefore(session.group!.endDate);
+    final running = session.group!.acceptsEntries();
 
     return Stack(
       children: [

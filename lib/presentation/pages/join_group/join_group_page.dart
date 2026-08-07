@@ -94,6 +94,16 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
         }
       }
 
+      // Competição encerrada: membro atual entra em modo leitura (redirect),
+      // mas pessoa nova não pode entrar.
+      if (!group.acceptsEntries()) {
+        setState(() {
+          _error = 'Essa competição já encerrou. Só é possível visualizar.';
+          _loading = false;
+        });
+        return;
+      }
+
       setState(() => _loading = false);
     } catch (e) {
       setState(() {
@@ -137,6 +147,9 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
       final identity = ref.read(identityProvider);
       final groupRepo = ref.read(groupRepositoryProvider);
       final group = await groupRepo.getGroupByCode(widget.code);
+      if (group == null) {
+        throw StateError('Grupo não encontrado.');
+      }
 
       // Garante a conta nome+senha (cria se novo, valida se já existe).
       final accountId = await groupRepo.ensureAccount(
@@ -145,8 +158,16 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
       );
 
       // Já é membro do grupo com essa conta? Entra direto.
-      var me = await groupRepo.findMemberByAccount(group!.id, accountId);
+      var me = await groupRepo.findMemberByAccount(group.id, accountId);
       if (me == null) {
+        // Pessoa nova: precisa de competição ativa (a camada RLS também bloqueia).
+        if (!group.acceptsEntries()) {
+          context.showSnack(
+            'Essa competição já encerrou. Só é possível visualizar.',
+            isError: true,
+          );
+          return;
+        }
         me = await groupRepo.joinGroup(
           group: group,
           anonId: identity.anonId!,

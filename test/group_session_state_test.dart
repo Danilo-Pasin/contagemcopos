@@ -50,6 +50,48 @@ void main() {
     });
   });
 
+  group('GroupEntity.acceptsEntries', () {
+    final now = DateTime(2026, 8, 10, 12);
+
+    // grupo ativo que termina em 31/08
+    GroupEntity activeGroup({DateTime? end}) => GroupEntity(
+          id: 'g1',
+          code: 'ABCDEF',
+          name: 'Boteco',
+          creatorAnonId: 'anon1',
+          startDate: DateTime(2026, 8, 1),
+          endDate: end ?? DateTime(2026, 8, 31),
+          durationDays: 30,
+          maxGoal: 100,
+          status: GroupStatus.active,
+          coverEmoji: '🍻',
+          createdAt: DateTime(2026, 8, 1),
+        );
+
+    test('ageito quando ativo e dentro do prazo', () {
+      expect(activeGroup().acceptsEntries(now: now), isTrue);
+    });
+
+    test('exatamente no prazo (igual a now) NÃO aceita mais', () {
+      expect(activeGroup(end: now).acceptsEntries(now: now), isFalse);
+    });
+
+    test('após o prazo NÃO aceita', () {
+      expect(activeGroup(end: now.subtract(const Duration(hours: 1)))
+          .acceptsEntries(now: now), isFalse);
+    });
+
+    test('encerrado nunca aceita, mesmo com end no futuro', () {
+      final g = _group(status: GroupStatus.ended);
+      expect(g.acceptsEntries(now: now), isFalse);
+    });
+
+    test('archived nunca aceita', () {
+      expect(_group(status: GroupStatus.archived)
+          .acceptsEntries(now: now), isFalse);
+    });
+  });
+
   group('ParticipantEntity', () {
     test('isCreator reflete o role', () {
       expect(_p('a', 0, role: MemberRole.creator).isCreator, isTrue);
