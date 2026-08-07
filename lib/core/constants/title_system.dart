@@ -1,3 +1,7 @@
+/// Referência fixa usada quando o grupo é criado "sem meta", apenas para
+/// manter as faixas de título (Aprendiz, Cachaceiro…) funcionando.
+const int kNoGoalMaxGoal = 20;
+
 /// Representa uma faixa de título do sistema proporcional.
 class TitleTier {
   final String id;
@@ -13,7 +17,11 @@ class TitleTier {
   });
 
   /// Quantidade de bebidas necessária para atingir este título.
-  int requiredDrinks(int maxGoal) => (maxGoal * percentage / 100).ceil();
+  int requiredDrinks(int maxGoal) {
+    // Sem meta (0 ou negativo), usa a referência fixa das faixas.
+    final goal = maxGoal <= 0 ? kNoGoalMaxGoal : maxGoal;
+    return (goal * percentage / 100).ceil();
+  }
 
   @override
   String toString() => '$emoji $name';

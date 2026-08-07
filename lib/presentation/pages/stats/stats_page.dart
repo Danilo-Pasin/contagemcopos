@@ -7,6 +7,7 @@ import '../../../core/constants/title_system.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/date_time_x.dart';
+import '../../../domain/entities/participant_entity.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/group_session_provider.dart';
 import '../../widgets/app_states.dart';
@@ -22,25 +23,31 @@ class StatsPage extends ConsumerStatefulWidget {
 
 class _StatsPageState extends ConsumerState<StatsPage> {
   List<Map<String, dynamic>> _daily = [];
-  List<Map<String, dynamic>> _types = [];
+  List<Map<String, dynamic>> _perPerson = [];
   bool _loading = true;
   String? _loadedGroupId;
 
-  Future<void> _loadStats(String groupId) async {
+  Future<void> _loadStats(
+    String groupId,
+    List<ParticipantEntity> ranking,
+  ) async {
     try {
       final client = ref.read(supabaseClientProvider);
       final data = await client
           .from('ctg_drinks')
-          .select('created_at, drink_type')
+          .select('created_at, drink_type, participant_id')
           .eq('group_id', groupId);
       final byDay = <String, int>{};
-      final byType = <String, int>{};
+      // participante -> tipo -> quantidade
+      final personMap = <String, Map<String, int>>{};
       for (final row in data as List) {
         final dt = DateTime.parse(row['created_at']).toLocal();
         final key = DateTimeX.shortDate(dt);
         byDay[key] = (byDay[key] ?? 0) + 1;
-        final type = row['drink_type'] as String?;
-        byType[type ?? 'sem_tipo'] = (byType[type ?? 'sem_tipo'] ?? 0) + 1;
+        final type = (row['drink_type'] as String?) ?? 'sem_tipo';
+        final pid = (row['participant_id'] as String?) ?? 'sem_participante';
+        final inner = personMap.putIfAbsent(pid, () => {});
+        inner[type] = (inner[type] ?? 0) + 1;
       }
       final entries = byDay.entries.toList();
       entries.sort((a, b) {
@@ -52,15 +59,29 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         if (byMonth != 0) return byMonth;
         return int.parse(aP[0]).compareTo(int.parse(bP[0]));
       });
-      final typeEntries = byType.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
+
+      final persons = personMap.entries.map((e) {
+        final participant = ranking.where((p) => p.id == e.key).firstOrNull;
+        final name = participant?.name ?? 'Participante';
+        final types = e.value.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        final total =
+            types.fold<int>(0, (s, t) => s + t.value);
+        return {
+          'name': name,
+          'total': total,
+          'types': types
+              .map((t) => {'id': t.key, 'value': t.value})
+              .toList(),
+        };
+      }).toList()
+        ..sort((a, b) => (b['total'] as int).compareTo(a['total'] as int));
+
       setState(() {
         _daily = entries
             .map((e) => {'label': e.key, 'value': e.value})
             .toList();
-        _types = typeEntries
-            .map((e) => {'id': e.key, 'value': e.value})
-            .toList();
+        _perPerson = persons;
         _loading = false;
       });
     } catch (_) {
@@ -80,7 +101,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final groupId = session.group?.id;
     if (groupId != null && groupId != _loadedGroupId) {
       _loadedGroupId = groupId;
-      _loadStats(groupId);
+      _loadStats(groupId, ranking);
     }
 
     if (ranking.isEmpty) {
@@ -169,15 +190,15 @@ class _StatsPageState extends ConsumerState<StatsPage> {
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
-        // Tipos de bebidas
-        if (_types.isNotEmpty)
+        // Tipos de bebidas por pessoa
+        if (_perPerson.isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             sliver: SliverToBoxAdapter(
-              child: _DrinkTypesCard(types: _types, total: total),
+              child: _PerPersonTypesCard(persons: _perPerson),
             ),
           ),
-        if (_types.isNotEmpty)
+        if (_perPerson.isNotEmpty)
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.lg)),
         // Distribuição de títulos
         SliverPadding(
@@ -322,9 +343,6 @@ class _TitleDistribution extends StatelessWidget {
     final required = tier.requiredDrinks(maxGoal);
     final count = ranking.where((p) =>
         TitleSystem.currentTier(p.totalDrinks as int, maxGoal).id == tier.id).length;
-    if (count == 0 && required > (ranking.fold<int>(0, (m, p) => p.totalDrinks > m ? p.totalDrinks : m))) {
-      return const SizedBox.shrink();
-    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -352,82 +370,75 @@ class _TitleDistribution extends StatelessWidget {
   }
 }
 
-class _DrinkTypesCard extends StatelessWidget {
-  final List<Map<String, dynamic>> types;
-  final int total;
-  const _DrinkTypesCard({required this.types, required this.total});
+class _PerPersonTypesCard extends StatelessWidget {
+  final List<Map<String, dynamic>> persons;
+  const _PerPersonTypesCard({required this.persons});
 
   @override
   Widget build(BuildContext context) {
-    final max = types.fold<int>(
-        0, (m, e) => (e['value'] as int) > m ? (e['value'] as int) : m);
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Tipos de bebidas',
+          Text('Tipos de bebidas por pessoa',
               style: context.tt.titleSmall
                   ?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: AppSpacing.sm),
-          for (final t in types)
-            _DrinkTypeRow(
-              id: t['id'] as String,
-              value: t['value'] as int,
-              ratio: max == 0 ? 0 : (t['value'] as int) / max,
-              pctLabel: total == 0
-                  ? '${t['value']}'
-                  : '${(t['value'] as int) * 100 ~/ total}%',
-            ),
+          for (final person in persons) _PersonTypesRow(person: person),
         ],
       ),
     );
   }
 }
 
-class _DrinkTypeRow extends StatelessWidget {
-  final String id;
-  final int value;
-  final double ratio;
-  final String pctLabel;
-  const _DrinkTypeRow({
-    required this.id,
-    required this.value,
-    required this.ratio,
-    required this.pctLabel,
-  });
+class _PersonTypesRow extends StatelessWidget {
+  final Map<String, dynamic> person;
+  const _PersonTypesRow({required this.person});
 
   @override
   Widget build(BuildContext context) {
-    final def = drinkTypeById(id);
+    final types = (person['types'] as List).cast<Map<String, dynamic>>();
+    final total = person['total'] as int;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Text(def?.emoji ?? '🍻',
-                  style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
               Expanded(
-                child: Text(def?.label ?? 'Sem tipo',
+                child: Text(person['name'] as String,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: context.tt.bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                        ?.copyWith(fontWeight: FontWeight.w700)),
               ),
-              Text('$value ($pctLabel)',
+              Text('$total',
                   style: context.tt.bodySmall
                       ?.copyWith(color: context.cs.onSurfaceVariant)),
             ],
           ),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 6,
-              backgroundColor: context.cs.surfaceContainerHighest,
-            ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: types.map((t) {
+              final def = drinkTypeById(t['id'] as String);
+              return Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.cs.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  '${def?.emoji ?? '🍻'} ${def?.label ?? 'Sem tipo'} ×${t['value']}',
+                  style: context.tt.labelSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),

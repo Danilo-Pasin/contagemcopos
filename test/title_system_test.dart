@@ -57,6 +57,17 @@ void main() {
       expect(TitleSystem.nextTier(0, 1), isNotNull);
     });
 
+    test('sem meta (maxGoal <= 0) usa a referência fixa', () {
+      // kNoGoalMaxGoal = 20 → Aprendiz a partir de 2, Imperador a partir de 20.
+      expect(TitleSystem.tiers.first.requiredDrinks(0), 2);
+      expect(TitleSystem.tiers[4].requiredDrinks(-5), 20);
+      expect(TitleSystem.currentTier(0, 0).id, 'aprendiz');
+      expect(TitleSystem.currentTier(20, 0).id, 'imperador');
+      // 10 bebidas alcançam Rei do Boteco (10); próximo é Lenda (15).
+      expect(TitleSystem.nextTier(10, 0)?.id, 'lenda');
+      expect(TitleSystem.nextTier(20, 0)?.id, 'mito');
+    });
+
     test('nextTier é o primeiro não alcançado', () {
       expect(TitleSystem.nextTier(4, 40)?.id, 'cachaceiro');
       expect(TitleSystem.nextTier(47, 40)?.id, 'mito');

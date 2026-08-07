@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/competition_periods.dart';
+import '../../../core/constants/title_system.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
@@ -23,14 +24,16 @@ class CreateGroupPage extends ConsumerStatefulWidget {
 }
 
 class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
-final _groupNameCtrl = TextEditingController();
+  final _groupNameCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _customValueCtrl = TextEditingController(text: '1');
+  final _goalCtrl = TextEditingController(text: '12');
   CompetitionPeriod? _period;
   bool _customMode = false;
   int _customValue = 1;
   DurationUnit _customUnit = DurationUnit.days;
+  bool _goalEnabled = false;
   bool _obscurePass = true;
   String? _photoUrl;
   String _coverEmoji = '🍻';
@@ -63,7 +66,10 @@ final _groupNameCtrl = TextEditingController();
     return (c.totalHours / 24).round().clamp(1, 999999);
   }
 
-  int get _maxGoal => _chosen?.maxGoal ?? 0;
+  int get _maxGoal => _goalEnabled ? _goalValue : kNoGoalMaxGoal;
+
+  /// Valor digitado pelo usuário para a meta (quando "por meta").
+  int get _goalValue => int.tryParse(_goalCtrl.text.trim()) ?? 0;
 
   String get _durationLabel {
     final c = _chosen;
@@ -90,6 +96,7 @@ final _groupNameCtrl = TextEditingController();
       _passCtrl.text.length >= 5 &&
       _durationDays > 0 &&
       _customValue > 0 &&
+      (!_goalEnabled || _goalValue > 0) &&
       !_creating;
 
   @override
@@ -98,6 +105,7 @@ final _groupNameCtrl = TextEditingController();
     _nameCtrl.dispose();
     _passCtrl.dispose();
     _customValueCtrl.dispose();
+    _goalCtrl.dispose();
     super.dispose();
   }
 
@@ -319,14 +327,17 @@ final _groupNameCtrl = TextEditingController();
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: Row(
                       children: [
-                        const Text('🎯', style: TextStyle(fontSize: 28)),
+                        Text(_goalEnabled ? '🎯' : '🆓',
+                            style: const TextStyle(fontSize: 28)),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Meta máxima: $_maxGoal bebidas',
+                                _goalEnabled
+                                    ? 'Meta por pessoa: $_goalValue bebidas'
+                                    : 'Sem meta definida',
                                 style: context.tt.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
@@ -343,6 +354,44 @@ final _groupNameCtrl = TextEditingController();
                     ),
                   ),
                 ),
+              const SizedBox(height: AppSpacing.lg),
+
+              _SectionTitle('Meta da competição'),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ChoiceChip(
+                    label: const Text('🆓 Sem meta'),
+                    selected: !_goalEnabled,
+                    onSelected: (_) => setState(() => _goalEnabled = false),
+                  ),
+                  ChoiceChip(
+                    label: const Text('🎯 Por meta'),
+                    selected: _goalEnabled,
+                    onSelected: (_) => setState(() => _goalEnabled = true),
+                  ),
+                ],
+              ),
+              if (_goalEnabled) ...[
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _goalCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Meta por pessoa (bebidas)',
+                    prefixIcon: Icon(Icons.flag_outlined),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Os títulos (Aprendiz, Cachaceiro…) são calculados como '
+                  'faixas dessa meta. Sem meta, usamos uma referência fixa.',
+                  style: context.tt.bodySmall?.copyWith(
+                      color: context.cs.onSurfaceVariant),
+                ),
+              ],
               const SizedBox(height: AppSpacing.xl),
 
               _SectionTitle('Seu perfil'),
