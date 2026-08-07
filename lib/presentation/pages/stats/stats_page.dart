@@ -22,23 +22,15 @@ class StatsPage extends ConsumerStatefulWidget {
 class _StatsPageState extends ConsumerState<StatsPage> {
   List<Map<String, dynamic>> _daily = [];
   bool _loading = true;
+  String? _loadedGroupId;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadStats();
-  }
-
-  Future<void> _loadStats() async {
-    final code = _extractCode(context);
-    final session = ref.read(groupSessionProvider(code));
-    if (!session.hasGroup) return;
+  Future<void> _loadStats(String groupId) async {
     try {
       final client = ref.read(supabaseClientProvider);
       final data = await client
           .from('ctg_drinks')
           .select('created_at')
-          .eq('group_id', session.group!.id);
+          .eq('group_id', groupId);
       final byDay = <String, int>{};
       for (final row in data as List) {
         final dt = DateTime.parse(row['created_at']).toLocal();
@@ -72,6 +64,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     final session = ref.watch(groupSessionProvider(code));
     final ranking = session.ranking;
     final maxGoal = session.group?.maxGoal ?? 100;
+
+    // Carrega as estatísticas assim que o grupo estiver disponível
+    // (evita ficar preso em loading se a sessão ainda não carregou).
+    final groupId = session.group?.id;
+    if (groupId != null && groupId != _loadedGroupId) {
+      _loadedGroupId = groupId;
+      _loadStats(groupId);
+    }
 
     if (ranking.isEmpty) {
       return const ResponsiveContent(
@@ -121,7 +121,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
               crossAxisCount: 2,
               mainAxisSpacing: AppSpacing.sm,
               crossAxisSpacing: AppSpacing.sm,
-              childAspectRatio: 1.6,
+              mainAxisExtent: 108,
             ),
             delegate: SliverChildListDelegate([
               _MetricCard('🍺', 'Total', '$total', const Color(0xFF7C4DFF)),
@@ -209,33 +209,26 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(emoji, style: const TextStyle(fontSize: 18)),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(emoji, style: const TextStyle(fontSize: 18)),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.tt.titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w900)),
-              Text(label,
-                  style: context.tt.bodySmall
-                      ?.copyWith(color: context.cs.onSurfaceVariant)),
-            ],
-          ),
+          const Spacer(),
+          Text(value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.tt.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.w900)),
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.tt.bodySmall
+                  ?.copyWith(color: context.cs.onSurfaceVariant)),
         ],
       ),
     );
