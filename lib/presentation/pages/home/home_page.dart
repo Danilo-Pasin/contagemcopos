@@ -6,7 +6,6 @@ import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../widgets/app_buttons.dart';
 import '../../widgets/app_logo.dart';
-import '../../widgets/glass_card.dart';
 import '../../widgets/responsive_content.dart';
 import '../../providers/identity_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -118,31 +117,15 @@ class HomePage extends ConsumerWidget {
                           .fadeIn(delay: 600.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
                       const SizedBox(height: AppSpacing.md),
-                      // Campo de código — mesma largura máxima do botão e centralizado.
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: AppLayout.maxButtonWidth,
-                          ),
-                          child: _CodeEntryCard(),
-                        ),
+                      // Entrar em um grupo já existente (código + nome + senha)
+                      SecondaryButton(
+                        label: 'Já estou em um grupo',
+                        icon: Icons.key_rounded,
+                        onPressed: () => context.push(AppRoutes.login),
                       )
                           .animate()
                           .fadeIn(delay: 700.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Login de quem já é membro de um grupo
-                      TextButton.icon(
-                        onPressed: () => context.push(AppRoutes.login),
-                        icon: Icon(Icons.key_rounded, size: 18,
-                            color: fg.withValues(alpha: 0.7)),
-                        label: Text(
-                          'Já estou em um grupo — entrar',
-                          style: TextStyle(
-                              color: fg.withValues(alpha: 0.7),
-                              fontWeight: FontWeight.w600),
-                        ),
-                      ),
                       const Spacer(),
                       if (identity.knownGroups.isNotEmpty)
                         Padding(
@@ -200,63 +183,6 @@ class _FeaturePill extends StatelessWidget {
           ),
           ],
         ),
-    );
-  }
-}
-
-class _CodeEntryCard extends StatefulWidget {
-  const _CodeEntryCard();
-
-  @override
-  State<_CodeEntryCard> createState() => _CodeEntryCardState();
-}
-
-class _CodeEntryCardState extends State<_CodeEntryCard> {
-  final _codeCtrl = TextEditingController();
-
-  @override
-  void dispose() {
-    _codeCtrl.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final code = _codeCtrl.text.trim().toUpperCase();
-    if (code.isEmpty) return;
-    context.push(AppRoutes.join(code));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
-      child: TextField(
-        controller: _codeCtrl,
-        textCapitalization: TextCapitalization.characters,
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: fg,
-          fontWeight: FontWeight.w700,
-          fontSize: 20,
-          letterSpacing: 4,
-        ),
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          hintText: 'CÓDIGO DO GRUPO',
-          hintStyle: TextStyle(
-            color: fg.withValues(alpha: 0.3),
-            letterSpacing: 4,
-            fontWeight: FontWeight.w600,
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(Icons.arrow_forward_rounded, color: fg),
-            onPressed: _submit,
-          ),
-        ),
-        onSubmitted: (_) => _submit(),
-      ),
     );
   }
 }
