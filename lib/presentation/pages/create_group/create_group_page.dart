@@ -240,29 +240,30 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: CompetitionPeriod.presets.map((p) {
-                  final selected = _period?.id == p.id && !_customMode;
-                  return ChoiceChip(
-                    label: Text(p.label),
-                    selected: selected,
-                    onSelected: (_) =>
-                        setState(() {
-                      _period = p;
-                      _customMode = false;
-                    }),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ChoiceChip(
-                label: const Text('📅 Personalizado'),
-                selected: _customMode,
-                onSelected: (sel) {
-                  setState(() {
-                    _customMode = sel;
-                    if (sel) _period = null;
-                  });
-                },
+                children: [
+                  ...CompetitionPeriod.presets.map((p) {
+                    final selected = _period?.id == p.id && !_customMode;
+                    return ChoiceChip(
+                      label: Text(p.label),
+                      selected: selected,
+                      onSelected: (_) =>
+                          setState(() {
+                        _period = p;
+                        _customMode = false;
+                      }),
+                    );
+                  }),
+                  ChoiceChip(
+                    label: const Text('📅 Personalizado'),
+                    selected: _customMode,
+                    onSelected: (sel) {
+                      setState(() {
+                        _customMode = sel;
+                        if (sel) _period = null;
+                      });
+                    },
+                  ),
+                ],
               ),
               if (_customMode) ...[
                 const SizedBox(height: AppSpacing.md),

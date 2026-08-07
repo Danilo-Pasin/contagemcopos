@@ -25,7 +25,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
   List<Map<String, dynamic>> _daily = [];
   List<Map<String, dynamic>> _perPerson = [];
   bool _loading = true;
-  String? _loadedGroupId;
+  String? _loadedKey;
 
   Future<void> _loadStats(
     String groupId,
@@ -41,8 +41,14 @@ class _StatsPageState extends ConsumerState<StatsPage> {
       // participante -> tipo -> quantidade
       final personMap = <String, Map<String, int>>{};
       for (final row in data as List) {
-        final dt = DateTime.parse(row['created_at']).toLocal();
-        final key = DateTimeX.shortDate(dt);
+        final raw = row['created_at'];
+        final dt = raw is String ? DateTime.tryParse(raw) : null;
+        if (dt == null) {
+          debugPrint('StatsPage: created_at inválido em $row');
+          continue;
+        }
+        final local = dt.toLocal();
+        final key = DateTimeX.shortDate(local);
         byDay[key] = (byDay[key] ?? 0) + 1;
         final type = (row['drink_type'] as String?) ?? 'sem_tipo';
         final pid = (row['participant_id'] as String?) ?? 'sem_participante';
@@ -84,7 +90,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         _perPerson = persons;
         _loading = false;
       });
-    } catch (_) {
+    } catch (e) {
+      debugPrint('StatsPage: falha ao carregar estatísticas: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -98,9 +105,11 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     // Carrega as estatísticas assim que o grupo estiver disponível
     // (evita ficar preso em loading se a sessão ainda não carregou).
+    // Recarrega quando há novos drinks (total do grupo muda).
     final groupId = session.group?.id;
-    if (groupId != null && groupId != _loadedGroupId) {
-      _loadedGroupId = groupId;
+    final key = '$groupId::${session.totalGroupDrinks}';
+    if (groupId != null && key != _loadedKey) {
+      _loadedKey = key;
       _loadStats(groupId, ranking);
     }
 

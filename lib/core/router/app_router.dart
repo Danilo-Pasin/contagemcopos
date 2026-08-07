@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/pages/album/album_page.dart';
 import '../../presentation/pages/create_group/create_group_page.dart';
+import '../../presentation/pages/enter_group/enter_group_page.dart';
 import '../../presentation/pages/feed/feed_page.dart';
 import '../../presentation/pages/group/group_home_page.dart';
 import '../../presentation/pages/group/group_shell.dart';
@@ -28,6 +29,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.create,
         name: AppRoutes.createName,
         builder: (_, __) => const CreateGroupPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.enterGroup,
+        name: AppRoutes.enterGroupName,
+        builder: (_, __) => const EnterGroupPage(),
       ),
       GoRoute(
         path: AppRoutes.join(':code'),

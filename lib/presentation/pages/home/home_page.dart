@@ -117,7 +117,17 @@ class HomePage extends ConsumerWidget {
                           .fadeIn(delay: 600.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
                       const SizedBox(height: AppSpacing.md),
-                      // Entrar em um grupo já existente (código + nome + senha)
+                      // Definir código do grupo a entrar (Entrar em um grupo)
+                      SecondaryButton(
+                        label: 'Entrar em um grupo',
+                        icon: Icons.group_add_rounded,
+                        onPressed: () => context.push(AppRoutes.enterGroup),
+                      )
+                          .animate()
+                          .fadeIn(delay: 650.ms)
+                          .slideY(begin: 0.3, duration: 500.ms),
+                      const SizedBox(height: AppSpacing.md),
+                      // Já estou num grupo (código + nome + senha)
                       SecondaryButton(
                         label: 'Já estou em um grupo',
                         icon: Icons.key_rounded,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -28,17 +29,23 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
   late ConfettiController _confetti;
   String? _previousLeaderId;
   bool _mounted = false;
+  Timer? _ticker;
 
   @override
   void initState() {
     super.initState();
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _mounted = true;
+    // A cada 30s recalcula o countdown; só redesenha se o rótulo mudou.
+    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_mounted) setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _mounted = false;
+    _ticker?.cancel();
     _confetti.dispose();
     super.dispose();
   }
@@ -104,6 +111,10 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     final tier = TitleSystem.currentTier(me.totalDrinks, maxGoal);
     final nextTier = TitleSystem.nextTier(me.totalDrinks, maxGoal);
     final progress = TitleSystem.progressToNext(me.totalDrinks, maxGoal);
+    // Desafio encerrado quando o status é 'ended' OU o prazo já passou:
+    // a partir daí só leitura (sem +1 bebida / foto).
+    final running = session.group!.isActive &&
+        DateTime.now().isBefore(session.group!.endDate);
 
     return Stack(
       children: [
@@ -212,7 +223,7 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton.icon(
-                            onPressed: session.group!.isActive
+                            onPressed: running
                                 ? () => _addDrink(code)
                                 : null,
                             style: FilledButton.styleFrom(
@@ -240,7 +251,7 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                         SizedBox(
                           width: double.infinity,
                           child: TextButton.icon(
-                            onPressed: session.group!.isActive
+                            onPressed: running
                                 ? () => _addPhoto(code)
                                 : null,
                             icon: const Icon(Icons.add_a_photo_outlined),
@@ -353,7 +364,9 @@ class _GroupSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final days = DateTimeX.daysLeft(session.group!.endDate);
+    final stat = session.group!.isActive
+        ? DateTimeX.timeLeftStat(session.group!.endDate)
+        : (value: 0, label: 'encerrado');
     return GlassCard(
       padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md, vertical: AppSpacing.md),
@@ -375,8 +388,7 @@ class _GroupSummary extends StatelessWidget {
               color: context.cs.outlineVariant.withValues(alpha: 0.5)),
           Expanded(
               child: _StatCell(
-                  value: session.group!.isActive ? '$days' : '0',
-                  label: 'dias restantes')),
+                  value: '${stat.value}', label: stat.label)),
         ],
       ),
     );

@@ -8,6 +8,10 @@ class AppRoutes {
   static const String create = '/criar';
   static const String createName = 'create';
 
+  /// Página que pergunta o código antes de entrar num grupo.
+  static const String enterGroup = '/entrar-grupo';
+  static const String enterGroupName = 'enterGroup';
+
   // Path distinto do `group` evita conflito de rota no GoRouter.
   // O link compartilhável permanece /g/CODE (rota `group`).
   static String join(String code) => '/entrar/$code';

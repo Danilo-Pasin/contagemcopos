@@ -177,3 +177,56 @@ _refreshAll() — catch (_) {} silencioso	MÉDIO — engole exceções sem log	�
 ## ⏭️ Pendente
 - Usuário informará se o domínio `contagem.app` está ativo para definir o valor de
   `AppConfig.publicBaseUrl` (usado apenas como fallback em plataformas não-web).
+# 11. CHANGELOG — 2026-08-07 (rodada 4 — pós-auditoria)
+
+## ✅ 11.1 Estatísticas — gráfico "Bebidas por dia" vazio (bug)
+- **Problema:** o grupo tinha drinks cadastrados e o total/ranking os contava, mas
+  o gráfico diário mostrava "Sem registros".
+- **Causa:** `_StatsPageState` só carregava as estatísticas uma vez (guardava
+  `_loadedGroupId`) e datas inválidas como `created_at` eram tratadas com
+  `DateTime.parse` (lançava excessão engolida por um `catch (_) {}` silencioso).
+- **Solução (`stats_page.dart`):**
+  - Guarda reativa composta `groupId + totalGroupDrinks` recarrega quando há
+    bebidas novas (e quando o grupo aparece).
+  - Parsing defensivo: `DateTime.tryParse` para `created_at`; linhas com data
+    inválida são logadas e ignoradas em vez de derrubar a tela.
+  - `catch (e)` loga o erro via `debugPrint` (não mais silencioso).
+
+## ✅ 11.2 Criar grupo — chip "Personalizado" desalinhado
+- O chip "📅 Personalizado" ficava **fora** do `Wrap` de presets (tinha um
+  `SizedBox` solto), quebrando o layout da linha de períodos.
+- **Solução (`create_group_page.dart`):** movido para dentro do mesmo `Wrap`,
+  alinhado com os demais `ChoiceChip`.
+
+## ✅ 11.3 Novo fluxo "Entrar em um grupo"
+- **Home** ganhou o botão **"Entrar em um grupo 🎉"** (3º CTA) que leva à nova
+  `EnterGroupPage`.
+- **`EnterGroupPage` (novo)** pergunta o **código** do grupo (upper, sem espaços)
+  e navega para `AppRoutes.join(code)` → `JoinGroupPage`.
+- Rotas novas em `app_routes.dart` (`enterGroup = '/entrar-grupo'`) e registro no
+  `app_router.dart`. Distinto de `/entrar/:code` (join) para não conflitar.
+
+## ✅ 11.4 Mini-dashboard — countdown por hora/min/seg
+- Novo helper em `date_time_x.dart`:
+  - `timeLeft(end)` → rótulo progressivo ("2d 7h", "3h 20m", "7m", "42s", "encerrado").
+  - `timeLeftStat(end)` → (valor, rótulo) para célula do mini-dashboard.
+- `_GroupSummary` (group_home_page.dart) agora mostra o countdown no lugar do
+  "dias restantes" inteiro (dias → horas → minutos → segundos).
+- Timer periódico (30s) em `_GroupHomePageState` para atualizar o countdown; porém
+  o blinking com segundos exige 1s — mantido 30s para os casos de dias/horas. Para
+  a fase final (< 1 min) o 30s não mostra seg a tempo real, então o valor anuncia
+  e é aceito (ver "pendência" se necessário).
+- **Gating local:** `FilledButton` (+1 bebida) e `TextButton` (+foto) ficam
+  desabilitados quando o grupo não está ativo **ou** `endDate` já passou
+  (`running = isActive && now < endDate`).
+
+## Verificação
+- `flutter test` → ✅ 81/81 passam (novos testes para `timeLeft`/`timeLeftStat`).
+- `flutter build web --release` → ✅ compila.
+
+## ⏭️ Pendência
+- Se a fase final (últimos minutos/segundos) precisar de atualização contínua, o
+  timer do `_GroupHomePageState` deve mudar de 30s para ~1s quando faltar menos
+  de 1 min para o encerramento (evitar rebuilds frequentes o resto do tempo).
+
+---

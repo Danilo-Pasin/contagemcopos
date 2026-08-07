@@ -37,4 +37,29 @@ class DateTimeX {
     if (diff.inHours < 48) return '${diff.inHours}h restantes';
     return '${diff.inDays} dias restantes';
   }
+
+  /// Rótulo progressivo até o encerramento: dias → horas → minutos → segundos.
+  /// Retorna "encerrado" quando o prazo já passou.
+  static String timeLeft(DateTime end, {DateTime? now}) {
+    final diff = end.toLocal().difference((now ?? DateTime.now()).toLocal());
+    if (diff.inSeconds <= 0) return 'encerrado';
+    if (diff.inDays >= 1) return '${diff.inDays}d ${diff.inHours % 24}h';
+    if (diff.inHours >= 1) return '${diff.inHours}h ${diff.inMinutes % 60}m';
+    if (diff.inMinutes >= 1) return '${diff.inMinutes}m';
+    return '${diff.inSeconds}s';
+  }
+
+  /// Valor + unidade para o mini-dashboard, de forma compacta.
+  /// Retorna um mapa com 'value' (int) e 'label' para exibição em célula.
+  static ({int value, String label}) timeLeftStat(
+    DateTime end, {
+    DateTime? now,
+  }) {
+    final diff = end.toLocal().difference((now ?? DateTime.now()).toLocal());
+    if (diff.inSeconds <= 0) return (value: 0, label: 'encerrado');
+    if (diff.inDays >= 1) return (value: diff.inDays, label: 'dias restantes');
+    if (diff.inHours >= 1) return (value: diff.inHours, label: 'horas restantes');
+    if (diff.inMinutes >= 1) return (value: diff.inMinutes, label: 'min restantes');
+    return (value: diff.inSeconds, label: 'seg restantes');
+  }
 }

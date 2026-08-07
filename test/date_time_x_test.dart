@@ -78,6 +78,64 @@ void main() {
     });
   });
 
+  group('DateTimeX.timeLeft', () {
+    test('encerrado quando expirou', () {
+      final past = now.subtract(const Duration(seconds: 1));
+      expect(DateTimeX.timeLeft(past, now: now), 'encerrado');
+    });
+
+    test('segundos quando falta < 1min', () {
+      expect(
+          DateTimeX.timeLeft(now.add(const Duration(seconds: 42)), now: now), '42s');
+    });
+
+    test('minutos quando < 1h', () {
+      expect(
+          DateTimeX.timeLeft(now.add(const Duration(minutes: 7, seconds: 12)),
+              now: now),
+          '7m');
+    });
+
+    test('horas quando < 1d (com minutos restantes)', () {
+      expect(
+          DateTimeX.timeLeft(now.add(const Duration(hours: 3, minutes: 20)),
+              now: now),
+          '3h 20m');
+    });
+
+    test('dias a partir de 1d', () {
+      expect(
+          DateTimeX.timeLeft(now.add(const Duration(days: 2, hours: 7)),
+              now: now),
+          '2d 7h');
+    });
+  });
+
+  group('DateTimeX.timeLeftStat', () {
+    test('encerrado', () {
+      final s = DateTimeX.timeLeftStat(now.subtract(const Duration(minutes: 1)),
+          now: now);
+      expect(s.value, 0);
+      expect(s.label, 'encerrado');
+    });
+
+    test('horas restantes quando < 24h', () {
+      final s = DateTimeX.timeLeftStat(
+          now.add(const Duration(hours: 5, minutes: 30)),
+          now: now);
+      expect(s.value, 5);
+      expect(s.label, 'horas restantes');
+    });
+
+    test('dias restantes a partir de 24h', () {
+      final s = DateTimeX.timeLeftStat(
+          now.add(const Duration(days: 3, hours: 1)),
+          now: now);
+      expect(s.value, 3);
+      expect(s.label, 'dias restantes');
+    });
+  });
+
   group('DateTimeX.format/shortDate', () {
     test('shortDate sempre dd/MM', () {
       expect(DateTimeX.shortDate(DateTime(2026, 1, 5, 8, 0)), '05/01');
