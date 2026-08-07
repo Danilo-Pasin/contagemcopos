@@ -1,6 +1,6 @@
 # Contagem — Copa das Bebidas 🍻
 
-Aplicativo social onde grupos de amigos registram a quantidade de bebidas consumidas durante um período e competem em um ranking. **Flutter Web PWA** instalável na tela inicial, **sem login** — bastam nome e foto opcional.
+Aplicativo social onde grupos de amigos registram a quantidade de bebidas consumidas durante uma competição e disputam o ranking. **Flutter Web PWA** instalável na tela inicial, com identidade local por nome (senha opcional por grupo) e foto opcional.
 
 ## Stack
 
@@ -47,13 +47,17 @@ lib/
 
 ## Funcionalidades
 
-- ✅ Criação de grupo com código + link compartilhável (`/g/AB72XC`)
-- ✅ Entrada sem login (nome + foto opcional) · identidade salva localmente
+- ✅ Criação de grupo com código + link compartilhável (`/g/AB72XC`) e período de competição
+- ✅ Meta opcional por pessoa (bebidas) ou modo livre (sem meta definida)
+- ✅ Home com CTAs "Criar Grupo", "Entrar em um grupo" (por código) e "Já estou em um grupo" (nome + senha)
+- ✅ Entrada sem baixa fricção: nome + foto opcional · identidade salva localmente
+- ✅ Autenticação leve com senha por grupo apenas como **hash** no servidor (RPCs do Postgres)
 - ✅ Cards de participantes com botão **+1 BEBIDA** (sem confirmação) e **Adicionar Foto**
 - ✅ Feed estilo Instagram (histórico em tempo real)
 - ✅ Ranking com pódio 🥇🥈🥉 em tempo real
-- ✅ Sistema de títulos proporcional ao período (7 faixas, meta calculada por duração)
-- ✅ Estatísticas (total, média, mais ativo, gráfico diário, distribuição de títulos)
+- ✅ Sistema de títulos (7 faixas, meta proporcional ao período) e distribuição na página de stats
+- ✅ Estatísticas (total, média, mais ativo, gráfico "Bebidas por dia", tipos por pessoa)
+- ✅ Countdown no mini-dashboard; competição bloqueia +1 bebida/foto após o término
 - ✅ Álbum de fotos com visualizador ampliado
 - ✅ Conquistas (18 achievements)
 - ✅ Compartilhamento (Copômetro, QR Code, código, link)
@@ -65,5 +69,6 @@ lib/
 
 ```bash
 flutter build web --release     # build (também serve como typecheck/compile check)
+flutter test                    # roda toda a suíte (test/)
 flutter pub get                 # instalar dependências
 ```
