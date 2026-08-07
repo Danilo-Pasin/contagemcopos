@@ -8,6 +8,7 @@ class IdentityState {
   final bool ready;
   final String? anonId;
   final String savedName;
+  final String? accountId;
   final String? savedPhoto;
   final List<String> knownGroups;
   final Object? error;
@@ -16,6 +17,7 @@ class IdentityState {
     this.ready = false,
     this.anonId,
     this.savedName = '',
+    this.accountId,
     this.savedPhoto,
     this.knownGroups = const [],
     this.error,
@@ -27,6 +29,7 @@ class IdentityState {
     bool? ready,
     String? anonId,
     String? savedName,
+    String? accountId,
     String? savedPhoto,
     List<String>? knownGroups,
     Object? error,
@@ -35,6 +38,7 @@ class IdentityState {
         ready: ready ?? this.ready,
         anonId: anonId ?? this.anonId,
         savedName: savedName ?? this.savedName,
+        accountId: accountId ?? this.accountId,
         savedPhoto: savedPhoto ?? this.savedPhoto,
         knownGroups: knownGroups ?? this.knownGroups,
         error: error,
@@ -57,6 +61,7 @@ class IdentityNotifier extends StateNotifier<IdentityState> {
         ready: true,
         anonId: anonId,
         savedName: _service.savedName,
+        accountId: _service.accountId,
         savedPhoto: _service.savedPhoto,
         knownGroups: _service.knownGroups,
       );
@@ -76,6 +81,7 @@ class IdentityNotifier extends StateNotifier<IdentityState> {
         ready: true,
         anonId: anonId,
         savedName: _service.savedName,
+        accountId: _service.accountId,
         savedPhoto: _service.savedPhoto,
         knownGroups: _service.knownGroups,
       );
@@ -86,12 +92,21 @@ class IdentityNotifier extends StateNotifier<IdentityState> {
     }
   }
 
-  /// Salva o perfil local.
-  Future<void> saveProfile({required String name, String? photoUrl}) async {
-    await _service.saveProfile(name: name, photoUrl: photoUrl);
+  /// Salva o perfil local (nome, foto e id de conta quando houver).
+  Future<void> saveProfile({
+    required String name,
+    String? photoUrl,
+    String? accountId,
+  }) async {
+    await _service.saveProfile(
+      name: name,
+      photoUrl: photoUrl,
+      accountId: accountId,
+    );
     state = state.copyWith(
       savedName: name,
       savedPhoto: photoUrl,
+      accountId: accountId ?? state.accountId,
     );
   }
 

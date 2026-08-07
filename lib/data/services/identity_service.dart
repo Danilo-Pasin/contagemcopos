@@ -19,6 +19,8 @@ class IdentityService {
 
   String get savedName => _prefs.getString(StorageKeys.currentName) ?? '';
 
+  String? get accountId => _prefs.getString(StorageKeys.currentAccountId);
+
   String? get savedPhoto => _prefs.getString(StorageKeys.currentPhoto);
 
   bool get hasProfile => savedName.trim().isNotEmpty;
@@ -40,9 +42,16 @@ class IdentityService {
     return id;
   }
 
-  /// Salva o perfil local (nome + foto opcional).
-  Future<void> saveProfile({required String name, String? photoUrl}) async {
+  /// Salva o perfil local (nome + foto opcional) e o id de conta (login nome+senha).
+  Future<void> saveProfile({
+    required String name,
+    String? photoUrl,
+    String? accountId,
+  }) async {
     await _prefs.setString(StorageKeys.currentName, name.trim());
+    if (accountId != null) {
+      await _prefs.setString(StorageKeys.currentAccountId, accountId);
+    }
     if (photoUrl != null) {
       await _prefs.setString(StorageKeys.currentPhoto, photoUrl);
     }

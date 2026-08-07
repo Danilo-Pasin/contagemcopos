@@ -13,14 +13,11 @@ class DrinkTypeDef {
 
 const List<DrinkTypeDef> kDrinkTypes = [
   DrinkTypeDef('cerveja', '🍺', 'Cerveja'),
-  DrinkTypeDef('longneck', '🍾', 'Long Neck'),
+  DrinkTypeDef('copo', '🍺', 'Copão'),
   DrinkTypeDef('vinho', '🍷', 'Vinho'),
   DrinkTypeDef('espumante', '🥂', 'Espumante'),
   DrinkTypeDef('destilado', '🥃', 'Destilado'),
   DrinkTypeDef('drink', '🍹', 'Drinque'),
-  DrinkTypeDef('energetico', '⚡', 'Energético'),
-  DrinkTypeDef('sem_alcool', '🥤', 'Sem álcool'),
-  DrinkTypeDef('outro', '🧃', 'Outro'),
 ];
 
 /// Resolve emojis/label de um tipo salvo; retorna null se desconhecido.

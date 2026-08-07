@@ -131,12 +131,16 @@ class HomePage extends ConsumerWidget {
                           .fadeIn(delay: 700.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
                       const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Digite um código para entrar em um grupo',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: fg.withValues(alpha: 0.4),
-                          fontSize: 12,
+                      // Login de quem já é membro de um grupo
+                      TextButton.icon(
+                        onPressed: () => context.push(AppRoutes.login),
+                        icon: Icon(Icons.key_rounded, size: 18,
+                            color: fg.withValues(alpha: 0.7)),
+                        label: Text(
+                          'Já estou em um grupo — entrar',
+                          style: TextStyle(
+                              color: fg.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                       const Spacer(),

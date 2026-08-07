@@ -13,6 +13,10 @@ class AppRoutes {
   static String join(String code) => '/entrar/$code';
   static const String joinName = 'join';
 
+  /// Login de usuário já cadastrado (nome + senha), acessível pela home.
+  static const String login = '/entrar-login';
+  static const String loginName = 'login';
+
   static String group(String code) => '/g/$code';
   static const String groupName = 'group';
 

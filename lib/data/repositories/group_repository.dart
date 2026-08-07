@@ -69,6 +69,7 @@ class GroupRepository {
     required GroupEntity group,
     required String anonId,
     required String name,
+    String? accountId,
     String? photoUrl,
     bool isCreator = false,
   }) async {
@@ -76,6 +77,7 @@ class GroupRepository {
       'group_id': group.id,
       'anon_id': anonId,
       'name': name,
+      'account_id': accountId,
       'photo_url': photoUrl,
       'role': isCreator ? 'creator' : 'member',
     }).select().single();
@@ -92,6 +94,48 @@ class GroupRepository {
         .maybeSingle();
     if (data == null) return null;
     return ParticipantModel(data as Map<String, dynamic>).toEntity();
+  }
+
+  /// Busca participante de um grupo pelo id de conta (nome + senha).
+  Future<ParticipantEntity?> findMemberByAccount(
+      String groupId, String accountId) async {
+    final data = await _client
+        .from('ctg_participants')
+        .select()
+        .eq('group_id', groupId)
+        .eq('account_id', accountId)
+        .maybeSingle();
+    if (data == null) return null;
+    return ParticipantModel(data as Map<String, dynamic>).toEntity();
+  }
+
+  /// Garante que existe uma conta (name + password).
+  ///
+  /// - Se a conta com esse nome já existe e a senha bate, devolve o id.
+  /// - Se a conta não existe, cria e devolve o id.
+  /// - Se a conta existe mas a senha difere, lança erro.
+  Future<String> ensureAccount({
+    required String name,
+    required String password,
+  }) async {
+    final trimmed = name.trim();
+    final existing = await _client
+        .from('ctg_accounts')
+        .select('id,password')
+        .eq('name', trimmed)
+        .maybeSingle();
+    if (existing != null) {
+      if (existing['password'].toString() != password) {
+        throw Exception('Senha incorreta para "$trimmed". Se é novo, use outro nome.');
+      }
+      return existing['id'] as String;
+    }
+    final ins = await _client
+        .from('ctg_accounts')
+        .insert({'name': trimmed, 'password': password})
+        .select('id')
+        .single();
+    return ins['id'] as String;
   }
 
   /// Lista participantes com total de bebidas (via ctg_ranking_view).

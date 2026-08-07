@@ -23,16 +23,24 @@ class JoinGroupPage extends ConsumerStatefulWidget {
 
 class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
   final _nameCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   String? _photoUrl;
   bool _loading = true;
   bool _joining = false;
+  bool _obscurePass = true;
   String? _groupName;
   String? _error;
-  bool _alreadyMember = false;
+  String? _accountId;
+
+  bool get _canJoin =>
+      _nameCtrl.text.trim().isNotEmpty &&
+      _passCtrl.text.length >= 5 &&
+      !_joining;
 
   @override
   void initState() {
     super.initState();
+    _accountId = ref.read(identityProvider).accountId;
     _load();
   }
 
@@ -58,7 +66,22 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
         _photoUrl = identity.savedPhoto;
       }
 
-      if (identity.anonId != null) {
+      // Já sou membro (conta reconhecida no dispositivo)? Entra direto.
+      if (_accountId != null) {
+        final me = await groupRepo.findMemberByAccount(group.id, _accountId!);
+        if (me != null) {
+          await ref
+              .read(identityProvider.notifier)
+              .rememberMember(widget.code, me.id);
+          if (mounted) {
+            context.go(AppRoutes.group(widget.code));
+            return;
+          }
+        }
+      }
+
+      // Fallback: conta por anon_id (perfil legado).
+      if (_accountId == null && identity.anonId != null) {
         final me = await groupRepo.findMember(group.id, identity.anonId!);
         if (me != null) {
           await ref
@@ -83,6 +106,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
@@ -106,7 +130,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
   }
 
   Future<void> _join() async {
-    if (_nameCtrl.text.trim().isEmpty) return;
+    if (!_canJoin) return;
     setState(() => _joining = true);
     try {
       final identityNotifier = ref.read(identityProvider.notifier);
@@ -114,21 +138,30 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
       final groupRepo = ref.read(groupRepositoryProvider);
       final group = await groupRepo.getGroupByCode(widget.code);
 
-      await groupRepo.joinGroup(
-        group: group!,
-        anonId: identity.anonId!,
+      // Garante a conta nome+senha (cria se novo, valida se já existe).
+      final accountId = await groupRepo.ensureAccount(
         name: _nameCtrl.text.trim(),
-        photoUrl: _photoUrl,
+        password: _passCtrl.text,
       );
 
-      await identityNotifier.saveProfile(
-          name: _nameCtrl.text.trim(), photoUrl: _photoUrl);
-
-      // busca o participante recém-criado para registrar localmente
-      final me = await groupRepo.findMember(group.id, identity.anonId!);
-      if (me != null) {
-        await identityNotifier.rememberMember(widget.code, me.id);
+      // Já é membro do grupo com essa conta? Entra direto.
+      var me = await groupRepo.findMemberByAccount(group!.id, accountId);
+      if (me == null) {
+        me = await groupRepo.joinGroup(
+          group: group,
+          anonId: identity.anonId!,
+          name: _nameCtrl.text.trim(),
+          accountId: accountId,
+          photoUrl: _photoUrl,
+        );
       }
+
+      await identityNotifier.saveProfile(
+        name: _nameCtrl.text.trim(),
+        photoUrl: _photoUrl,
+        accountId: accountId,
+      );
+      await identityNotifier.rememberMember(widget.code, me.id);
 
       if (mounted) context.go(AppRoutes.group(widget.code));
     } catch (e) {
@@ -207,7 +240,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                         TextField(
                           controller: _nameCtrl,
                           textCapitalization: TextCapitalization.words,
-                          textInputAction: TextInputAction.done,
+                          textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
                             labelText: 'Seu nome',
                             hintText: 'Como vão te chamar?',
@@ -215,14 +248,39 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                           ),
                           onChanged: (_) => setState(() {}),
                         ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.md),
+                        TextField(
+                          controller: _passCtrl,
+                          obscureText: _obscurePass,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _canJoin ? _join() : null,
+                          decoration: InputDecoration(
+                            labelText: 'Crie sua senha (mín. 5)',
+                            hintText: 'Você usará para voltar ao seu perfil',
+                            prefixIcon: const Icon(Icons.lock_outline),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePass
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined),
+                              onPressed: () => setState(
+                                  () => _obscurePass = !_obscurePass),
+                            ),
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ).animate().fadeIn(delay: 380.ms).slideY(begin: 0.1),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          'Já participa deste grupo? Use o MESMO nome e senha '
+                          'para recuperar seu perfil.',
+                          style: context.tt.bodySmall?.copyWith(
+                              color: context.cs.onSurfaceVariant),
+                        ),
                         const SizedBox(height: AppSpacing.xl),
                         PrimaryButton(
                           label: 'Entrar no grupo',
                           icon: Icons.login_rounded,
                           loading: _joining,
-                          onPressed: _nameCtrl.text.trim().isEmpty
-                              ? null
-                              : _join,
+                          onPressed: _canJoin ? _join : null,
                         ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
                       ],
                     ),

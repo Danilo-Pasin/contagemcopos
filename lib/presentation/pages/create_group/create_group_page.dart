@@ -25,8 +25,10 @@ class CreateGroupPage extends ConsumerStatefulWidget {
 class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
   final _groupNameCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   CompetitionPeriod? _period;
   bool _customMode = false;
+  bool _obscurePass = true;
   DateTime? _customStart;
   DateTime? _customEnd;
   String? _photoUrl;
@@ -50,6 +52,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
   bool get _canCreate =>
       _groupNameCtrl.text.trim().isNotEmpty &&
       _nameCtrl.text.trim().isNotEmpty &&
+      _passCtrl.text.length >= 5 &&
       _durationDays > 0 &&
       !_creating;
 
@@ -57,6 +60,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
   void dispose() {
     _groupNameCtrl.dispose();
     _nameCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
@@ -105,15 +109,26 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
         coverEmoji: _coverEmoji,
       );
 
+      // Cria/valida a conta nome+senha do criador.
+      final accountId = await groupRepo.ensureAccount(
+        name: _nameCtrl.text.trim(),
+        password: _passCtrl.text,
+      );
+
       final participant = await groupRepo.joinGroup(
         group: group,
         anonId: anonId,
         name: _nameCtrl.text.trim(),
+        accountId: accountId,
         photoUrl: _photoUrl,
         isCreator: true,
       );
 
-      await identity.saveProfile(name: _nameCtrl.text.trim(), photoUrl: _photoUrl);
+      await identity.saveProfile(
+        name: _nameCtrl.text.trim(),
+        photoUrl: _photoUrl,
+        accountId: accountId,
+      );
       await identity.rememberMember(group.code, participant.id);
 
       if (mounted) {
@@ -282,6 +297,24 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                     icon: const Icon(Icons.camera_alt_outlined),
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: _passCtrl,
+                obscureText: _obscurePass,
+                decoration: InputDecoration(
+                  labelText: 'Crie sua senha (mín. 5)',
+                  hintText: 'Você usará para voltar ao seu perfil',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePass
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined),
+                    onPressed: () =>
+                        setState(() => _obscurePass = !_obscurePass),
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
               ),
               const SizedBox(height: AppSpacing.xl),
 

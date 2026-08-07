@@ -9,6 +9,7 @@ import '../../presentation/pages/group/group_shell.dart';
 import '../../presentation/pages/hall_of_fame/hall_of_fame_page.dart';
 import '../../presentation/pages/home/home_page.dart';
 import '../../presentation/pages/join_group/join_group_page.dart';
+import '../../presentation/pages/login/login_page.dart';
 import '../../presentation/pages/ranking/ranking_page.dart';
 import '../../presentation/pages/share/share_page.dart';
 import '../../presentation/pages/stats/stats_page.dart';
@@ -33,6 +34,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.joinName,
         builder: (_, state) =>
             JoinGroupPage(code: state.pathParameters['code']!),
+      ),
+      GoRoute(
+        path: AppRoutes.login,
+        name: AppRoutes.loginName,
+        builder: (_, state) => const LoginGroupPage(),
       ),
       // Grupo com bottom navigation (shell)
       ShellRoute(

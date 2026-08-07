@@ -97,12 +97,16 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       }
       debugPrint('[GroupSession] grupo encontrado: ${group.name}');
 
-      // Tenta localizar o participante atual
+      // Tenta localizar o participante atual (conta nome+senha ou anon_id)
       final identityState = _ref.read(identityProvider);
       ParticipantEntity? me;
-      if (identityState.anonId != null) {
+      if (identityState.accountId != null) {
+        me = await _groupRepo.findMemberByAccount(
+            group.id, identityState.accountId!);
+        debugPrint('[GroupSession] membro (conta): ${me?.name ?? "nenhum"}');
+      } else if (identityState.anonId != null) {
         me = await _groupRepo.findMember(group.id, identityState.anonId!);
-        debugPrint('[GroupSession] membro encontrado: ${me?.name ?? "nenhum"}');
+        debugPrint('[GroupSession] membro (anon): ${me?.name ?? "nenhum"}');
       }
 
       state = GroupSessionState(
