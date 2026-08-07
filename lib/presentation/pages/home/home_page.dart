@@ -1,0 +1,258 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/router/app_routes.dart';
+import '../../../core/theme/app_tokens.dart';
+import '../../widgets/app_buttons.dart';
+import '../../widgets/app_logo.dart';
+import '../../widgets/glass_card.dart';
+import '../../widgets/responsive_content.dart';
+import '../../providers/identity_provider.dart';
+import '../../providers/theme_provider.dart';
+
+class HomePage extends ConsumerWidget {
+  const HomePage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final identity = ref.watch(identityProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDark ? AppGradients.hero : AppGradients.heroLight,
+        ),
+        child: SafeArea(
+          child: ResponsiveContent(
+            child: CustomScrollView(
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                      // Top bar
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const SizedBox(width: 40),
+                          Text(
+                            'Contagem',
+                            style: TextStyle(
+                              color: fg,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                              letterSpacing: -.5,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () =>
+                                ref.read(themeModeProvider.notifier).toggle(),
+                            icon: Icon(
+                              isDark
+                                  ? Icons.light_mode_rounded
+                                  : Icons.dark_mode_rounded,
+                              color: fg.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(flex: 2),
+                      // Logo
+                      const AppLogo()
+                          .animate()
+                          .scale(
+                              duration: 600.ms,
+                              curve: Curves.elasticOut,
+                              begin: const Offset(0.5, 0.5))
+                          .shimmer(delay: 800.ms),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        'Copa das Bebidas',
+                        style: TextStyle(
+                          color: fg.withValues(alpha: 0.7),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 2,
+                        ),
+                      ).animate().fadeIn(delay: 200.ms),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Crie grupos, registre\nsuas bebidas e domine\no ranking 🏆',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: fg,
+                          fontSize: 28,
+                          height: 1.2,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ).animate().fadeIn(delay: 300.ms).slideY(
+                            begin: 0.2,
+                            duration: 500.ms,
+                            curve: Curves.easeOut,
+                          ),
+                      const Spacer(flex: 2),
+                      // Stats pills
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _FeaturePill(emoji: '🍻', label: 'Grupos ilimitados'),
+                          const SizedBox(width: AppSpacing.md),
+                          _FeaturePill(emoji: '⚡', label: 'Tempo real'),
+                          const SizedBox(width: AppSpacing.md),
+                          _FeaturePill(emoji: '🏆', label: 'Ranking ao vivo'),
+                        ],
+                      ).animate().fadeIn(delay: 500.ms),
+                      const SizedBox(height: AppSpacing.xl),
+                      // CTA buttons
+                      PrimaryButton(
+                        label: 'Criar Grupo',
+                        icon: Icons.add_rounded,
+                        onPressed: () => context.push(AppRoutes.create),
+                      )
+                          .animate()
+                          .fadeIn(delay: 600.ms)
+                          .slideY(begin: 0.3, duration: 500.ms),
+                      const SizedBox(height: AppSpacing.md),
+                      // Campo de código — mesma largura máxima do botão e centralizado.
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: AppLayout.maxButtonWidth,
+                          ),
+                          child: _CodeEntryCard(),
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 700.ms)
+                          .slideY(begin: 0.3, duration: 500.ms),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        'Digite um código para entrar em um grupo',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: fg.withValues(alpha: 0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (identity.knownGroups.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: TextButton.icon(
+                            onPressed: () => context.push(
+                                AppRoutes.join(identity.knownGroups.last)),
+                            icon: const Icon(Icons.history, size: 18),
+                            label: Text(
+                              'Voltar para: ${identity.knownGroups.last}',
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeaturePill extends StatelessWidget {
+  final String emoji;
+  final String label;
+  const _FeaturePill({required this.emoji, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: fg.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: fg.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 14)),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: fg.withValues(alpha: 0.8),
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          ],
+        ),
+    );
+  }
+}
+
+class _CodeEntryCard extends StatefulWidget {
+  const _CodeEntryCard();
+
+  @override
+  State<_CodeEntryCard> createState() => _CodeEntryCardState();
+}
+
+class _CodeEntryCardState extends State<_CodeEntryCard> {
+  final _codeCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _codeCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final code = _codeCtrl.text.trim().toUpperCase();
+    if (code.isEmpty) return;
+    context.push(AppRoutes.join(code));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
+      child: TextField(
+        controller: _codeCtrl,
+        textCapitalization: TextCapitalization.characters,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: fg,
+          fontWeight: FontWeight.w700,
+          fontSize: 20,
+          letterSpacing: 4,
+        ),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: 'CÓDIGO DO GRUPO',
+          hintStyle: TextStyle(
+            color: fg.withValues(alpha: 0.3),
+            letterSpacing: 4,
+            fontWeight: FontWeight.w600,
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(Icons.arrow_forward_rounded, color: fg),
+            onPressed: _submit,
+          ),
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+    );
+  }
+}

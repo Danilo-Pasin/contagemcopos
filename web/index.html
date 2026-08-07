@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Contagem — Competição social de bebidas entre amigos. Crie grupos, registre suas bebidas, suba no ranking e divirta-se.">
+
+  <!-- PWA / iOS meta tags -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Contagem">
+  <meta name="theme-color" content="#7C4DFF">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="manifest" href="manifest.json">
+
+  <title>Contagem — Copa das Bebidas</title>
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0B0E14; }
+    #splash {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 18px;
+      background: radial-gradient(circle at 50% 35%, #1a1330 0%, #0B0E14 70%);
+      color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: opacity .4s ease; z-index: 9999;
+    }
+    #splash .logo {
+      width: 96px; height: 96px; border-radius: 26px;
+      background: linear-gradient(135deg, #7C4DFF, #E040FB);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; box-shadow: 0 12px 40px rgba(124,77,255,.45);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    #splash .title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+    #splash .subtitle { font-size: 13px; opacity: .6; font-weight: 500; }
+    @keyframes pulse {
+      0%,100% { transform: scale(1); } 50% { transform: scale(1.06); }
+    }
+    #splash.gone { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <div class="logo">🍺</div>
+    <div class="title">Contagem</div>
+    <div class="subtitle">Copa das Bebidas</div>
+  </div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var s = document.getElementById('splash');
+      if (s) { s.classList.add('gone'); setTimeout(function(){ s.remove(); }, 500); }
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

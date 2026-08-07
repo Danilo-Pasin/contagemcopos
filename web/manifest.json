@@ -1,0 +1,36 @@
+{
+    "name": "Contagem — Copa das Bebidas",
+    "short_name": "Contagem",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0B0E14",
+    "theme_color": "#7C4DFF",
+    "description": "Competição social de bebidas entre amigos. Crie grupos, registre, suba no ranking.",
+    "orientation": "portrait-primary",
+    "categories": ["social", "entertainment", "lifestyle"],
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
