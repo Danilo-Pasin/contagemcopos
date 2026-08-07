@@ -79,4 +79,11 @@ class AppGradients {
     end: Alignment.bottomRight,
     colors: [Color(0xFF1A1330), Color(0xFF0B0E14)],
   );
+
+  /// Gradiente da hero no modo claro — tom claro e desbotado para o texto escuro.
+  static const LinearGradient heroLight = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF3EDFF), Color(0xFFE4F0FF)],
+  );
 }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../widgets/app_buttons.dart';
+import '../../widgets/app_logo.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/responsive_content.dart';
 import '../../providers/identity_provider.dart';
@@ -16,10 +17,14 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final identity = ref.watch(identityProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppGradients.hero),
+        decoration: BoxDecoration(
+          gradient: isDark ? AppGradients.hero : AppGradients.heroLight,
+        ),
         child: SafeArea(
           child: ResponsiveContent(
             child: CustomScrollView(
@@ -35,10 +40,10 @@ class HomePage extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const SizedBox(width: 40),
-                          const Text(
+                          Text(
                             'Contagem',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: fg,
                               fontWeight: FontWeight.w800,
                               fontSize: 20,
                               letterSpacing: -.5,
@@ -48,35 +53,17 @@ class HomePage extends ConsumerWidget {
                             onPressed: () =>
                                 ref.read(themeModeProvider.notifier).toggle(),
                             icon: Icon(
-                              Theme.of(context).brightness == Brightness.dark
+                              isDark
                                   ? Icons.light_mode_rounded
                                   : Icons.dark_mode_rounded,
-                              color: Colors.white70,
+                              color: fg.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
                       ),
                       const Spacer(flex: 2),
                       // Logo
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          gradient: AppGradients.primary,
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF7C4DFF)
-                                  .withValues(alpha: 0.5),
-                              blurRadius: 40,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Text('🍺', style: TextStyle(fontSize: 60)),
-                        ),
-                      )
+                      const AppLogo()
                           .animate()
                           .scale(
                               duration: 600.ms,
@@ -87,18 +74,18 @@ class HomePage extends ConsumerWidget {
                       Text(
                         'Copa das Bebidas',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: fg.withValues(alpha: 0.7),
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 2,
                         ),
                       ).animate().fadeIn(delay: 200.ms),
                       const SizedBox(height: AppSpacing.sm),
-                      const Text(
+                      Text(
                         'Crie grupos, registre\nsuas bebidas e domine\no ranking 🏆',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: fg,
                           fontSize: 28,
                           height: 1.2,
                           fontWeight: FontWeight.w800,
@@ -131,15 +118,24 @@ class HomePage extends ConsumerWidget {
                           .fadeIn(delay: 600.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
                       const SizedBox(height: AppSpacing.md),
-                      _CodeEntryCard()
+                      // Campo de código — mesma largura máxima do botão e centralizado.
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: AppLayout.maxButtonWidth,
+                          ),
+                          child: _CodeEntryCard(),
+                        ),
+                      )
                           .animate()
                           .fadeIn(delay: 700.ms)
                           .slideY(begin: 0.3, duration: 500.ms),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Digite um código para entrar em um grupo',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: fg.withValues(alpha: 0.4),
                           fontSize: 12,
                         ),
                       ),
@@ -176,12 +172,14 @@ class _FeaturePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
+        color: fg.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: fg.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -191,7 +189,7 @@ class _FeaturePill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
+              color: fg.withValues(alpha: 0.8),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -226,15 +224,16 @@ class _CodeEntryCardState extends State<_CodeEntryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : const Color(0xFF1B1030);
     return GlassCard(
-      color: Colors.white.withValues(alpha: 0.08),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 4),
       child: TextField(
         controller: _codeCtrl,
         textCapitalization: TextCapitalization.characters,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: fg,
           fontWeight: FontWeight.w700,
           fontSize: 20,
           letterSpacing: 4,
@@ -243,12 +242,12 @@ class _CodeEntryCardState extends State<_CodeEntryCard> {
           border: InputBorder.none,
           hintText: 'CÓDIGO DO GRUPO',
           hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: fg.withValues(alpha: 0.3),
             letterSpacing: 4,
             fontWeight: FontWeight.w600,
           ),
           suffixIcon: IconButton(
-            icon: const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+            icon: Icon(Icons.arrow_forward_rounded, color: fg),
             onPressed: _submit,
           ),
         ),
