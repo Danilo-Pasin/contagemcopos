@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'presentation/providers/core_providers.dart';
@@ -25,6 +26,10 @@ Future<void> main() async {
   };
 
   await initSupabase();
+
+  // Carrega os símbolos de data/hora em pt_BR (ex.: "05/01", "d MMM").
+  // Sem isso, DateFormat(..., 'pt_BR') lança LocaleDataException em runtime.
+  await initializeDateFormatting('pt_BR', null);
 
   final prefs = await SharedPreferences.getInstance();
 
