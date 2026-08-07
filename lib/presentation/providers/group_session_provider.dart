@@ -219,13 +219,15 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
   }
 
   /// Registra +1 bebida.
-  Future<void> addDrink() async {
+  Future<void> addDrink({String? drinkType, String? note}) async {
     final me = state.me;
     final group = state.group;
     if (me == null || group == null) return;
     await _drinkRepo.addDrink(
       groupId: group.id,
       participantId: me.id,
+      drinkType: drinkType,
+      note: note,
     );
     await _refreshAll();
   }

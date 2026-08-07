@@ -13,10 +13,14 @@ class DrinkRepository {
   Future<void> addDrink({
     required String groupId,
     required String participantId,
+    String? drinkType,
+    String? note,
   }) async {
     await _client.from('ctg_drinks').insert({
       'group_id': groupId,
       'participant_id': participantId,
+      if (drinkType != null) 'drink_type': drinkType,
+      if (note != null) 'note': note,
     });
   }
 

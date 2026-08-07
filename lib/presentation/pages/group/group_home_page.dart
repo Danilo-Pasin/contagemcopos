@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/constants/drink_types.dart';
 import '../../../core/constants/title_system.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/theme/app_tokens.dart';
@@ -57,7 +58,15 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
   }
 
   Future<void> _addDrink(String code) async {
-    await ref.read(groupSessionProvider(code).notifier).addDrink();
+    final res = await showModalBottomSheet<_DrinkPickResult>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _DrinkTypeSheet(),
+    );
+    if (!mounted || res == null) return;
+    await ref
+        .read(groupSessionProvider(code).notifier)
+        .addDrink(drinkType: res.type?.id);
   }
 
   Future<void> _addPhoto(String code) async {
@@ -396,4 +405,78 @@ class _StatCell extends StatelessWidget {
 }
 
 // import necessário para GoRouterState
+/// Resultado do popup de tipo de bebida.
+class _DrinkPickResult {
+  final DrinkTypeDef? type;
+  const _DrinkPickResult(this.type);
+}
 
+/// Popup opcional exibido ao tocar em "+1 BEBIDA".
+///
+/// Permite marcar o tipo da bebida (opcional). Se o usuário tocar em
+/// "Só contar", o resultado é um tipo nulo — a bebida ainda é registrada,
+/// mas sem tipo. Fechar o sheet (arrastar/fora) cancela a adição.
+class _DrinkTypeSheet extends StatelessWidget {
+  const _DrinkTypeSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Material(
+        color: context.cs.surfaceContainerLow,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('🍺 O que você vai beber?',
+                      style: context.tt.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Opcional — ajuda a enriquecer suas estatísticas.',
+                style: context.tt.bodySmall
+                    ?.copyWith(color: context.cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: kDrinkTypes.map((t) {
+                  return ChoiceChip(
+                    selected: false,
+                    avatar: Text(t.emoji),
+                    label: Text(t.label),
+                    onSelected: (_) =>
+                        Navigator.pop(context, _DrinkPickResult(t)),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, const _DrinkPickResult(null)),
+                  icon: const Icon(Icons.remove),
+                  label: const Text('Só contar (sem tipo)'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -97,13 +97,13 @@ class HomePage extends ConsumerWidget {
                           ),
                       const Spacer(flex: 2),
                       // Stats pills
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
                         children: [
                           _FeaturePill(emoji: '🍻', label: 'Grupos ilimitados'),
-                          const SizedBox(width: AppSpacing.md),
                           _FeaturePill(emoji: '⚡', label: 'Tempo real'),
-                          const SizedBox(width: AppSpacing.md),
                           _FeaturePill(emoji: '🏆', label: 'Ranking ao vivo'),
                         ],
                       ).animate().fadeIn(delay: 500.ms),
