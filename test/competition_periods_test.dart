@@ -8,37 +8,61 @@ void main() {
       expect(ids.toSet().length, ids.length);
     });
 
-    test('dias positivos e crescentes em ordem', () {
+    test('duração positiva e ordenada', () {
       int prev = 0;
       for (final p in CompetitionPeriod.presets) {
-        expect(p.days, greaterThan(0));
-        expect(p.days > prev, isTrue, reason: 'presets devem estar ordenados');
+        expect(p.totalHours, greaterThan(0));
+        expect(p.totalHours > prev, isTrue,
+            reason: 'presets devem estar em ordem crescente');
         expect(p.maxGoal, greaterThan(0));
         expect(p.label.trim(), isNotEmpty);
-        prev = p.days;
+        prev = p.totalHours;
       }
     });
 
-    test('meta acompanha os dias (proporcional)', () {
-      // 1 dia → 12; 3 dias → 36; 30 dias → 100; 90 dias → 260
-      expect(CompetitionPeriod.presets.first.maxGoal, 12);
-      expect(CompetitionPeriod.presets[2].maxGoal, 36);
-      expect(CompetitionPeriod.presets[6].maxGoal, 180);
-      expect(CompetitionPeriod.presets.last.maxGoal, 260);
+    test('inclui a opção de 8 horas', () {
+      final eight = CompetitionPeriod.presets.firstWhere((p) => p.id == '8h');
+      expect(eight.totalHours, 8);
+      expect(eight.unit, DurationUnit.hours);
+    });
+
+    test('presets que o usuário pediu para remover não existem mais', () {
+      final ids = CompetitionPeriod.presets.map((p) => p.id).toList();
+      expect(ids.contains('2d'), isFalse);
+      expect(ids.contains('3d'), isFalse);
+      expect(ids.contains('2m'), isFalse);
+    });
+
+    test('conversões de unidade', () {
+      expect(DurationUnit.hours.hoursPerOne, 1);
+      expect(DurationUnit.days.hoursPerOne, 24);
+      expect(DurationUnit.months.hoursPerOne, 720);
+    });
+
+    test('durationDays arredonda com piso 1', () {
+      expect(CompetitionPeriod(id: 'x', label: 'x', value: 1, unit: DurationUnit.days).durationDays, 1);
+      expect(CompetitionPeriod(id: 'x', label: 'x', value: 8, unit: DurationUnit.hours).durationDays, 1);
+      expect(CompetitionPeriod(id: 'x', label: 'x', value: 30, unit: DurationUnit.hours).durationDays, 1);
+      expect(CompetitionPeriod(id: 'x', label: 'x', value: 7, unit: DurationUnit.days).durationDays, 7);
     });
   });
 
-  group('CompetitionPeriod.customGoal', () {
-    test('~3,3 bebidas/dia com arredondamento', () {
-      expect(CompetitionPeriod.customGoal(10), (10 * 3.3).round());
-      expect(CompetitionPeriod.customGoal(30), 99);
-      expect(CompetitionPeriod.customGoal(90), 297);
+  group('CompetitionPeriod.maxGoal', () {
+    test('usa a meta explícita do preset', () {
+      final oneDay = CompetitionPeriod.presets.firstWhere((p) => p.id == '1d');
+      expect(oneDay.maxGoal, 12);
     });
 
-    test('dias zero/negativos não lançam erro', () {
-      expect(CompetitionPeriod.customGoal(0), 0);
-      // valor negativo não é um período real, mas a fórmula não deve lançar
-      expect(CompetitionPeriod.customGoal(-5), lessThanOrEqualTo(0));
+    test('personalizado calcula ~3,3/dia com piso 1', () {
+      CompetitionPeriod p(int value, DurationUnit unit) =>
+          CompetitionPeriod(id: 'c', label: 'c', value: value, unit: unit);
+
+      // 30 dias → ~99 bebidas
+      expect(p(30, DurationUnit.days).maxGoal, 99);
+      // 1 dia → 3 (piso 1, sem explosão)
+      expect(p(1, DurationUnit.days).maxGoal, inInclusiveRange(1, 4));
+      // 8 horas → 1..2
+      expect(p(8, DurationUnit.hours).maxGoal, inInclusiveRange(1, 2));
     });
   });
 }

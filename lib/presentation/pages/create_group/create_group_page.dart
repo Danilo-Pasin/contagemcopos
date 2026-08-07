@@ -23,30 +23,65 @@ class CreateGroupPage extends ConsumerStatefulWidget {
 }
 
 class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
-  final _groupNameCtrl = TextEditingController();
+final _groupNameCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
+  final _customValueCtrl = TextEditingController(text: '1');
   CompetitionPeriod? _period;
   bool _customMode = false;
+  int _customValue = 1;
+  DurationUnit _customUnit = DurationUnit.days;
   bool _obscurePass = true;
-  DateTime? _customStart;
-  DateTime? _customEnd;
   String? _photoUrl;
   String _coverEmoji = '🍻';
   bool _creating = false;
 
   static const _emojis = ['🍻', '🍺', '🍷', '🥃', '🍹', '🥂', '🍾', '🍸'];
 
-  int get _durationDays {
-    if (_customMode && _customStart != null && _customEnd != null) {
-      return _customEnd!.difference(_customStart!).inDays + 1;
+  /// Período em vigor (personalizado construído na hora ou um preset escolhido).
+  CompetitionPeriod? get _chosen {
+    if (_customMode) {
+      return CompetitionPeriod(
+        id: 'custom',
+        label: 'Personalizado',
+        value: _customValue,
+        unit: _customUnit,
+      );
     }
-    return _period?.days ?? 0;
+    return _period;
   }
 
-  int get _maxGoal {
-    if (_customMode) return CompetitionPeriod.customGoal(_durationDays);
-    return _period?.maxGoal ?? 0;
+  Duration get _chosenDuration {
+    final c = _chosen;
+    if (c == null) return Duration.zero;
+    return Duration(hours: c.totalHours);
+  }
+
+  int get _durationDays {
+    final c = _chosen;
+    if (c == null || c.totalHours <= 0) return 0;
+    return (c.totalHours / 24).round().clamp(1, 999999);
+  }
+
+  int get _maxGoal => _chosen?.maxGoal ?? 0;
+
+  String get _durationLabel {
+    final c = _chosen;
+    if (c == null) return '';
+    switch (c.unit) {
+      case DurationUnit.hours:
+        return '${c.value} horas';
+      case DurationUnit.days:
+        return c.value == 1 ? '1 dia' : '${c.value} dias';
+      case DurationUnit.months:
+        return c.value == 1 ? '1 mês' : '${c.value} meses';
+    }
+  }
+
+  double get _drinksPerDay {
+    final c = _chosen;
+    if (c == null || c.totalHours <= 0) return 0;
+    return c.maxGoal / (c.totalHours / 24);
   }
 
   bool get _canCreate =>
@@ -54,6 +89,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
       _nameCtrl.text.trim().isNotEmpty &&
       _passCtrl.text.length >= 5 &&
       _durationDays > 0 &&
+      _customValue > 0 &&
       !_creating;
 
   @override
@@ -61,6 +97,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
     _groupNameCtrl.dispose();
     _nameCtrl.dispose();
     _passCtrl.dispose();
+    _customValueCtrl.dispose();
     super.dispose();
   }
 
@@ -94,15 +131,12 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
       final groupRepo = ref.read(groupRepositoryProvider);
 
       final now = DateTime.now();
-      final start = _customMode ? _customStart! : now;
-      final end = _customMode
-          ? _customEnd!
-          : now.add(Duration(days: _durationDays));
+      final end = now.add(_chosenDuration);
 
       final group = await groupRepo.createGroup(
         anonId: anonId,
         name: _groupNameCtrl.text.trim(),
-        startDate: start,
+        startDate: now,
         endDate: end,
         durationDays: _durationDays,
         maxGoal: _maxGoal,
@@ -215,28 +249,70 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
               ChoiceChip(
                 label: const Text('📅 Personalizado'),
                 selected: _customMode,
-                onSelected: (_) async {
-                  final now = DateTime.now();
-                  final picked = await showDateRangePicker(
-                    context: context,
-                    firstDate: now,
-                    lastDate: now.add(const Duration(days: 365)),
-                    initialDateRange: DateTimeRange(
-                      start: now,
-                      end: now.add(const Duration(days: 7)),
-                    ),
-                    locale: const Locale('pt', 'BR'),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _customMode = true;
-                      _customStart = picked.start;
-                      _customEnd = picked.end;
-                    });
-                  }
+                onSelected: (sel) {
+                  setState(() {
+                    _customMode = sel;
+                    if (sel) _period = null;
+                  });
                 },
               ),
-              if (_durationDays > 0)
+              if (_customMode) ...[
+                const SizedBox(height: AppSpacing.md),
+                GlassCard(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Defina seu período',
+                        style: context.tt.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _customValueCtrl,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Quantidade',
+                                prefixIcon: Icon(Icons.numbers_rounded),
+                              ),
+                              onChanged: (v) => setState(() {
+                                _customValue =
+                                    int.tryParse(v.trim()) ?? 0;
+                              }),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: DropdownButtonFormField<DurationUnit>(
+                              initialValue: _customUnit,
+                              decoration: const InputDecoration(
+                                labelText: 'Unidade',
+                                prefixIcon: Icon(Icons.schedule_rounded),
+                              ),
+                              items: DurationUnit.values
+                                  .map((u) => DropdownMenuItem(
+                                        value: u,
+                                        child: Text(u.pluralLabel),
+                                      ))
+                                  .toList(),
+                              onChanged: (u) {
+                                if (u == null) return;
+                                setState(() => _customUnit = u);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (_chosen != null && _durationDays > 0)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.md),
                   child: GlassCard(
@@ -255,8 +331,8 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               Text(
-                                '$_durationDays dias · '
-                                '${(_maxGoal / _durationDays).toStringAsFixed(1)} beb/dia',
+                                '$_durationLabel · '
+                                '${_drinksPerDay.toStringAsFixed(1)} beb/dia',
                                 style: context.tt.bodySmall?.copyWith(
                                     color: context.cs.onSurfaceVariant),
                               ),

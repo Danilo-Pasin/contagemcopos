@@ -125,7 +125,9 @@ class SecondaryButton extends StatelessWidget {
       icon: icon != null ? Icon(icon, size: 20) : const SizedBox.shrink(),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(0, AppButtonSizes.regular),
+        // Preenche toda a largura (dentro do ConstrainedBox abaixo), assim o
+        // secundário fica com o MESMO tamanho do primário.
+        minimumSize: const Size(double.infinity, AppButtonSizes.regular),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
@@ -134,15 +136,11 @@ class SecondaryButton extends StatelessWidget {
     );
 
     return Center(
-      child: Align(
-        alignment: Alignment.center,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: maxWidth ?? AppLayout.maxButtonWidth,
-            minWidth: 160,
-          ),
-          child: button,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth ?? AppLayout.maxButtonWidth,
         ),
+        child: button,
       ),
     );
   }
