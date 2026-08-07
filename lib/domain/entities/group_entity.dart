@@ -1,4 +1,4 @@
-enum GroupStatus { active, ended, archived }
+enum GroupStatus { active, ended, archived, unknown }
 
 /// Entidade de domínio: Grupo de competição.
 class GroupEntity {
@@ -33,6 +33,7 @@ class GroupEntity {
   bool get isActive => status == GroupStatus.active;
   bool get isEnded => status == GroupStatus.ended;
   bool get isArchived => status == GroupStatus.archived;
+  bool get isUnknown => status == GroupStatus.unknown;
 
   /// Competição aceitando novos registros/entradas: precisa estar `active` e
   /// ainda dentro do prazo. Espelha a regra das políticas RLS do backend

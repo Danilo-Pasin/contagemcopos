@@ -16,7 +16,7 @@ class ActivityModel {
       type: ActivityType.fromString(json['type'] as String),
       payload: payload,
       createdAt: DateTime.parse(json['created_at'] as String),
-      photoUrl: (json['photo_url'] as String?) ?? payload['url'] as String?,
+      photoUrl: (json['photo_url'] as String?) ?? (payload['url'] is String ? payload['url'] as String : null),
     );
   }
 }

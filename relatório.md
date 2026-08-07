@@ -267,3 +267,48 @@ Migração `enforce_active_competition_insert` aplicada; políticas verificadas 
 - `flutter build web --release` → ✅ compila.
 
 ---
+# 13. CHANGELOG — 2026-08-07 (rodada 6 — endurecimento + ampliação de testes)
+
+## ✅ 13.1 Status/activity desconhecidos tratados com segurança
+- **`GroupStatus.unknown`** (novo): status desconhecido do banco NUNCA mais vira
+  `active` (antes liberava o front). `isActive/isEnded/isArchived` = false e
+  `acceptsEntries()` = false → alinhado à trava RLS. `group_model.toEntity()`
+  mapeia e loga via `debugPrint`. O banco usa enum `ctg_group_status`, então na
+  prática status desconhecido não ocorre com dados válidos (defensivo).
+- **`ActivityType.unknown`** (novo): `ActivityType.fromString` para valores
+  desconhecidos retorna `unknown` (antes `drinkAdded` — rótulo errado no feed).
+  `feed_page._actionLabel` ganhou `default` ("fez uma atividade"); o switch
+  exaustivo forçou o caso novo em compilação (sem risco de break).
+
+## 13.2 — Correção de crash/consistência
+- **`activity_model.dart`**: `payload['url'] as String?` que podia lançar
+  exceção se o valor não fosse String. Troca por cast seguro
+  (`payload['url'] is String ? ... : null`) — evita crash no feed.
+- **`identity_provider.dart`**: `saveProfile` gravava o nome **sem trim** no
+  estado (o serviço persistia com trim). Agora o estado espelha o persistido
+  (`trim`), corrigindo inconsistência apontada por teste.
+
+## 13.3 — Rotas usam constantes (anti-typo)
+- `app_router.dart` agora reusa `AppRoutes.*Segment` (feed/ranking/stats/album/
+  share/hall-of-fame) em vez de literais hardcoded → typo só falharia em compile/
+  runtime.
+
+## 13.4 Testes novos (+33)
+- `data_model_test.dart`: `group_model` (status map incl. unknown, cover_emoji
+  fallback, `ended_at` null, round-trip), `participant_model` (role, double→int,
+  position null), `activity_model` (payload padrão, `photoUrl` json/payload,
+  cast seguro), `photo_model`, `achievement_model` (unlocked `==true`), e
+  **`ActivityType.fromString`** (9 casos, incl. que unknown ≠ drinkAdded).
+- `identity_notifier_test.dart`: `IdentityState` (`hasProfile` c/ trim,
+  `copyWith`) e `IdentityNotifier` via fake (init ok/erro, saveProfile,
+  rememberMember, ensureReady).
+- `date_time_x_test.dart`: ampliado c/ `format()` (padrão e custom) e
+  `dayMonth` (pt_BR).
+- `app_routes_test.dart`: ampliado c/ rotas top-level (home/create/enterGroup/
+  login), unicidade de nomes e valores dos segmentos.
+
+## Verificação
+- `flutter test` → ✅ 119/119 passam (era 86).
+- `flutter build web --release` → ✅ compila.
+
+---

@@ -59,42 +59,42 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
             routes: [
               GoRoute(
-                path: 'feed',
+                path: AppRoutes.feedSegment,
                 builder: (_, state) => GroupShell(
                   code: state.pathParameters['code']!,
                   child: const FeedPage(),
                 ),
               ),
               GoRoute(
-                path: 'ranking',
+                path: AppRoutes.rankingSegment,
                 builder: (_, state) => GroupShell(
                   code: state.pathParameters['code']!,
                   child: const RankingPage(),
                 ),
               ),
               GoRoute(
-                path: 'stats',
+                path: AppRoutes.statsSegment,
                 builder: (_, state) => GroupShell(
                   code: state.pathParameters['code']!,
                   child: const StatsPage(),
                 ),
               ),
               GoRoute(
-                path: 'album',
+                path: AppRoutes.albumSegment,
                 builder: (_, state) => GroupShell(
                   code: state.pathParameters['code']!,
                   child: const AlbumPage(),
                 ),
               ),
               GoRoute(
-                path: 'share',
+                path: AppRoutes.shareSegment,
                 builder: (_, state) => GroupShell(
                   code: state.pathParameters['code']!,
                   child: const SharePage(),
                 ),
               ),
               GoRoute(
-                path: 'hall-of-fame',
+                path: AppRoutes.hallOfFameSegment,
                 builder: (_, state) => HallOfFamePage(
                   code: state.pathParameters['code']!,
                 ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/group_entity.dart';
 
 class GroupModel {
@@ -28,8 +29,14 @@ class GroupModel {
       case 'archived':
         status = GroupStatus.archived;
         break;
-      default:
+      case 'active':
         status = GroupStatus.active;
+        break;
+      default:
+        // Por segurança, nunca mapear um status desconhecido como 'active'
+        // (que liberaria entradas no front). Vira 'unknown' → não aceita nada.
+        debugPrint('GroupModel: status desconhecido "${json['status']}"');
+        status = GroupStatus.unknown;
     }
     return GroupEntity(
       id: json['id'] as String,

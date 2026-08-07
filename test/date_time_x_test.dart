@@ -140,5 +140,23 @@ void main() {
     test('shortDate sempre dd/MM', () {
       expect(DateTimeX.shortDate(DateTime(2026, 1, 5, 8, 0)), '05/01');
     });
+
+    test('format padrão inclui data e hora', () {
+      expect(DateTimeX.format(DateTime(2026, 1, 5, 8, 30)),
+          '05/01/2026 08:30');
+    });
+
+    test('format com padrão custom', () {
+      expect(
+          DateTimeX.format(DateTime(2026, 1, 5, 8, 30), pattern: 'dd/MM'),
+          '05/01');
+      expect(
+          DateTimeX.format(DateTime(2026, 3, 15, 8, 30), pattern: 'HH:mm'),
+          '08:30');
+    });
+
+    test('dayMonth usa mês abreviado em pt_BR', () {
+      expect(DateTimeX.dayMonth(DateTime(2026, 1, 5)), matches(RegExp(r'^\d+ .*$')));
+    });
   });
 }

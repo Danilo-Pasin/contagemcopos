@@ -168,6 +168,8 @@ class _FeedTile extends StatelessWidget {
         return 'mudou de título';
       case ActivityType.achievementUnlocked:
         return 'desbloqueou uma conquista';
+      case ActivityType.unknown:
+        return 'fez uma atividade';
     }
   }
 }

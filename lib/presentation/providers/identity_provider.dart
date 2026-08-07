@@ -103,8 +103,10 @@ class IdentityNotifier extends StateNotifier<IdentityState> {
       photoUrl: photoUrl,
       accountId: accountId,
     );
+    // Mantém o estado espelhando o que foi persistido (nome com trim).
+    final trimmedName = name.trim();
     state = state.copyWith(
-      savedName: name,
+      savedName: trimmedName,
       savedPhoto: photoUrl,
       accountId: accountId ?? state.accountId,
     );

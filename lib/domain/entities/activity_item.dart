@@ -5,7 +5,8 @@ enum ActivityType {
   groupCreated,
   titleChanged,
   achievementUnlocked,
-  groupEnded;
+  groupEnded,
+  unknown;
 
   static ActivityType fromString(String s) {
     switch (s) {
@@ -24,7 +25,7 @@ enum ActivityType {
       case 'group_ended':
         return ActivityType.groupEnded;
       default:
-        return ActivityType.drinkAdded;
+        return ActivityType.unknown;
     }
   }
 }
