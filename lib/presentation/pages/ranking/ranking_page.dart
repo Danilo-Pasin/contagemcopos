@@ -79,7 +79,8 @@ class RankingPage extends ConsumerWidget {
                               photoUrl: p.photoUrl,
                               name: p.name,
                               radius: 20,
-                              isCreator: p.isCreator),
+                              isCreator: p.isCreator,
+                              isLeader: p.id == ranking.first.id),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
@@ -182,6 +183,7 @@ class _PodiumColumn extends StatelessWidget {
           name: participant.name as String,
           radius: place == 1 ? 32 : 24,
           isCreator: participant.isCreator,
+          isLeader: place == 1,
           hasGradientRing: place == 1,
         ),
         const SizedBox(height: 4),

@@ -2,12 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_tokens.dart';
 
-/// Avatar com fallback de inicial, coroa de criador opcional e borda.
+/// Avatar com fallback de inicial, coroa de líder, escudo de criador e borda.
 class AppAvatar extends StatelessWidget {
   final String? photoUrl;
   final String name;
   final double radius;
   final bool isCreator;
+  final bool isLeader;
   final bool hasGradientRing;
   final String? emojiFallback;
 
@@ -17,6 +18,7 @@ class AppAvatar extends StatelessWidget {
     required this.name,
     this.radius = 24,
     this.isCreator = false,
+    this.isLeader = false,
     this.hasGradientRing = false,
     this.emojiFallback,
   });
@@ -61,24 +63,36 @@ class AppAvatar extends StatelessWidget {
       );
     }
 
+    final badgeColor = Theme.of(context).scaffoldBackgroundColor;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         avatar,
-        if (isCreator)
+        if (isLeader)
           Positioned(
             top: -4,
             right: -4,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: const Text('👑', style: TextStyle(fontSize: 14)),
-            ),
+            child: _badge('👑', badgeColor),
+          ),
+        if (isCreator)
+          Positioned(
+            top: -4,
+            left: -4,
+            child: _badge('🛡️', badgeColor),
           ),
       ],
+    );
+  }
+
+  Widget _badge(String emoji, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: bgColor,
+        shape: BoxShape.circle,
+      ),
+      child: Text(emoji, style: const TextStyle(fontSize: 14)),
     );
   }
 

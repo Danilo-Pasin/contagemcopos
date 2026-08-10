@@ -3,47 +3,68 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TitleSystem', () {
-    test('ordena os títulos do menor para o maior', () {
-      for (var i = 0; i < TitleSystem.tiers.length - 1; i++) {
-        expect(
-          TitleSystem.tiers[i].percentage <
-              TitleSystem.tiers[i + 1].percentage,
-          isTrue,
-          reason: '${TitleSystem.tiers[i].id} deve ser menor que o próximo',
-        );
+    TitleTier byId(String id) => TitleSystem.tiers.firstWhere((t) => t.id == id);
+
+    test('patamares são monotônicos não-decrescentes para qualquer meta', () {
+      for (final goal in [0, 1, 20, 40, 60, 100, 150]) {
+        final reqs = TitleSystem.thresholdsFor(goal);
+        for (var i = 0; i < reqs.length - 1; i++) {
+          expect(
+            reqs[i] <= reqs[i + 1],
+            isTrue,
+            reason: 'meta $goal: patamar $i não deve ser maior que o próximo',
+          );
+        }
       }
     });
 
-    test('requiredDrinks arredonda para cima com @percentual', () {
-      // 10% de 40 = 4
-      expect(TitleSystem.tiers.first.requiredDrinks(40), 4);
-      // 25% de 40 = 10
-      expect(TitleSystem.tiers[1].requiredDrinks(40), 10);
-      // 100% de 40 = 40
-      expect(TitleSystem.tiers[4].requiredDrinks(40), 40);
-      // 120% de 40 = 48
-      expect(TitleSystem.tiers[5].requiredDrinks(40), 48);
-      // 150% de 40 = 60
-      expect(TitleSystem.tiers[6].requiredDrinks(40), 60);
+    test('os títulos são por quantidade fixa de copos (não % da meta)', () {
+      expect(byId('aprendiz').required, 5);
+      expect(byId('cachaceiro').required, 10);
+      expect(byId('rei_boteco').required, 15);
+      expect(byId('lenda').required, 20);
+      expect(byId('imperador').required, 30);
+      expect(byId('mito').required, 40);
+      expect(byId('deus').required, 50);
+      expect(byId('aura').required, 67);
+      expect(byId('alcoolatra').required, 76);
+      expect(byId('sigma').required, 88);
+      expect(byId('reabilitacao').required, 99);
+    });
+
+    test('requiredDrinks ignora a meta (é fixo)', () {
+      expect(byId('lenda').requiredDrinks(40), 20);
+      expect(byId('lenda').requiredDrinks(100), 20);
+      expect(byId('lenda').requiredDrinks(0), 20);
+      expect(byId('reabilitacao').requiredDrinks(40), 99);
     });
 
     test('currentTier sobe exatamente na fronteira', () {
-      // meta 40: Aprendiz a partir de 4
+      expect(TitleSystem.currentTier(0, 40).id, 'aprendiz');
       expect(TitleSystem.currentTier(4, 40).id, 'aprendiz');
-      expect(TitleSystem.currentTier(9, 40).id, 'aprendiz');
       // Cachaceiro a partir de 10
+      expect(TitleSystem.currentTier(5, 40).id, 'aprendiz');
+      expect(TitleSystem.currentTier(9, 40).id, 'aprendiz');
       expect(TitleSystem.currentTier(10, 40).id, 'cachaceiro');
-      // Rei do Boteco a partir de 20
-      expect(TitleSystem.currentTier(20, 40).id, 'rei_boteco');
-      // Lenda a partir de 30
-      expect(TitleSystem.currentTier(30, 40).id, 'lenda');
-      // Imperador a partir de 40
-      expect(TitleSystem.currentTier(40, 40).id, 'imperador');
-      // Mito a partir de 48
-      expect(TitleSystem.currentTier(48, 40).id, 'mito');
-      // Deus da Geladeira a partir de 60
-      expect(TitleSystem.currentTier(60, 40).id, 'deus');
-      expect(TitleSystem.currentTier(999, 40).id, 'deus');
+      expect(TitleSystem.currentTier(14, 40).id, 'cachaceiro');
+      // Rei do Boteco a partir de 15
+      expect(TitleSystem.currentTier(15, 40).id, 'rei_boteco');
+      expect(TitleSystem.currentTier(19, 40).id, 'rei_boteco');
+      // Lenda a partir de 20
+      expect(TitleSystem.currentTier(20, 40).id, 'lenda');
+      expect(TitleSystem.currentTier(29, 40).id, 'lenda');
+      // Imperador a partir de 30
+      expect(TitleSystem.currentTier(30, 40).id, 'imperador');
+      // Mito a partir de 40
+      expect(TitleSystem.currentTier(40, 40).id, 'mito');
+      // Deus da Geladeira a partir de 50
+      expect(TitleSystem.currentTier(50, 40).id, 'deus');
+      // Fixos finais
+      expect(TitleSystem.currentTier(67, 40).id, 'aura');
+      expect(TitleSystem.currentTier(76, 40).id, 'alcoolatra');
+      expect(TitleSystem.currentTier(88, 40).id, 'sigma');
+      expect(TitleSystem.currentTier(99, 40).id, 'reabilitacao');
+      expect(TitleSystem.currentTier(500, 40).id, 'reabilitacao');
     });
 
     test('com zero ou poucas bebidas retorna o primeiro título', () {
@@ -51,42 +72,44 @@ void main() {
       expect(TitleSystem.currentTier(3, 40).id, 'aprendiz');
     });
 
-    test('meta muito pequena não derruba em limite inválido', () {
-      // meta 1: requer 100% => 1, e 120% => 2. Nunca deve estourar.
+    test('meta pequena não derruba em limite inválido', () {
       expect(TitleSystem.currentTier(0, 1).id, isNotNull);
       expect(TitleSystem.nextTier(0, 1), isNotNull);
+      expect(TitleSystem.currentTier(99, 1).id, 'reabilitacao');
     });
 
-    test('sem meta (maxGoal <= 0) usa a referência fixa', () {
-      // kNoGoalMaxGoal = 20 → Aprendiz a partir de 2, Imperador a partir de 20.
-      expect(TitleSystem.tiers.first.requiredDrinks(0), 2);
-      expect(TitleSystem.tiers[4].requiredDrinks(-5), 20);
+    test('mesmo comportamento sem meta (maxGoal <= 0)', () {
+      expect(TitleSystem.tiers.first.requiredDrinks(0), 5);
+      expect(byId('reabilitacao').requiredDrinks(-5), 99);
       expect(TitleSystem.currentTier(0, 0).id, 'aprendiz');
-      expect(TitleSystem.currentTier(20, 0).id, 'imperador');
-      // 10 bebidas alcançam Rei do Boteco (10); próximo é Lenda (15).
-      expect(TitleSystem.nextTier(10, 0)?.id, 'lenda');
-      expect(TitleSystem.nextTier(20, 0)?.id, 'mito');
+      expect(TitleSystem.currentTier(20, 0).id, 'lenda');
+      // 10 bebidas alcançam Cachaceiro; próximo é Rei do Boteco (15).
+      expect(TitleSystem.nextTier(10, 0)?.id, 'rei_boteco');
+      expect(TitleSystem.nextTier(20, 0)?.id, 'imperador');
     });
 
     test('nextTier é o primeiro não alcançado', () {
-      expect(TitleSystem.nextTier(4, 40)?.id, 'cachaceiro');
-      expect(TitleSystem.nextTier(47, 40)?.id, 'mito');
-      // topo (>=150%) não tem próximo
-      expect(TitleSystem.nextTier(60, 40), isNull);
+      expect(TitleSystem.nextTier(4, 40)?.id, 'aprendiz');
+      expect(TitleSystem.nextTier(9, 40)?.id, 'cachaceiro');
+      expect(TitleSystem.nextTier(47, 40)?.id, 'deus');
+      // topo (>=99) não tem próximo
+      expect(TitleSystem.nextTier(99, 40), isNull);
       expect(TitleSystem.nextTier(1000, 40), isNull);
     });
 
-test('progressToNext é 0..1 e 1 no topo', () {
-      expect(TitleSystem.progressToNext(4, 40), 0);
-      expect(TitleSystem.progressToNext(7, 40), closeTo(0.5, 1e-9));
+    test('progressToNext é 0..1 e 1 no topo', () {
+      expect(TitleSystem.progressToNext(5, 40), 0);
+      // entre Aprendiz (5) e Cachaceiro (10)
+      expect(TitleSystem.progressToNext(7, 40), closeTo(0.4, 1e-9));
       expect(TitleSystem.progressToNext(9, 40), lessThan(1));
-      expect(TitleSystem.progressToNext(60, 40), 1);
+      expect(TitleSystem.progressToNext(99, 40), 1);
       // nunca negativo
       expect(TitleSystem.progressToNext(0, 40), inInclusiveRange(0, 1));
     });
 
     test('toString mostra emoji + nome', () {
-      expect(TitleSystem.tiers[4].toString(), '🏆 Imperador do Copo');
+      expect(byId('imperador').toString(), '🏆 Imperador do Copo');
+      expect(TitleSystem.tiers.length, 11);
     });
   });
 }

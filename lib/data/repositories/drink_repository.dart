@@ -9,19 +9,25 @@ class DrinkRepository {
   DrinkRepository(this._client);
   final SupabaseClient _client;
 
-  /// Registra uma bebida (aciona trigger de activity_log).
-  Future<void> addDrink({
+  /// Registra uma bebida (aciona trigger de activity_log) e devolve o id
+  /// criado (usado para vincular a foto obrigatória em `addDrinkWithPhoto`).
+  Future<String> addDrink({
     required String groupId,
     required String participantId,
     String? drinkType,
     String? note,
   }) async {
-    await _client.from('ctg_drinks').insert({
-      'group_id': groupId,
-      'participant_id': participantId,
-      if (drinkType != null) 'drink_type': drinkType,
-      if (note != null) 'note': note,
-    });
+    final data = await _client
+        .from('ctg_drinks')
+        .insert({
+          'group_id': groupId,
+          'participant_id': participantId,
+          if (drinkType != null) 'drink_type': drinkType,
+          if (note != null) 'note': note,
+        })
+        .select('id')
+        .single();
+    return (data as Map<String, dynamic>)['id'] as String;
   }
 
   /// Adiciona uma foto ao álbum (e ao feed).

@@ -222,16 +222,30 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
     await _refreshAll();
   }
 
-  /// Registra +1 bebida.
-  Future<void> addDrink({String? drinkType, String? note}) async {
+  /// Registra +1 bebida com a foto obrigatória vinculada.
+  ///
+  /// Insere a bebida, obtém o id criado e então registra a foto apontando para
+  /// ela (`ctg_photos.drink_id`), mantendo o registro atômico do ponto de
+  /// vista do usuário. Sem foto a bebida não é registrada.
+  Future<void> addDrinkWithPhoto({
+    String? drinkType,
+    String? note,
+    required String photoUrl,
+  }) async {
     final me = state.me;
     final group = state.group;
     if (me == null || group == null) return;
-    await _drinkRepo.addDrink(
+    final drinkId = await _drinkRepo.addDrink(
       groupId: group.id,
       participantId: me.id,
       drinkType: drinkType,
       note: note,
+    );
+    await _drinkRepo.addPhoto(
+      groupId: group.id,
+      participantId: me.id,
+      url: photoUrl,
+      drinkId: drinkId,
     );
     await _refreshAll();
   }
@@ -246,6 +260,14 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       participantId: me.id,
       url: url,
     );
+    await _refreshAll();
+  }
+
+  /// Atualiza a foto de perfil do participante atual.
+  Future<void> updateProfilePhoto(String url) async {
+    final me = state.me;
+    if (me == null) return;
+    await _groupRepo.updateParticipantPhoto(me.id, url);
     await _refreshAll();
   }
 

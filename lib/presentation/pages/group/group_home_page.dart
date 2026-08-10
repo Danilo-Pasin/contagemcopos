@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:postgrest/postgrest.dart';
 import '../../../core/constants/drink_types.dart';
 import '../../../core/constants/title_system.dart';
 import '../../../core/extensions/context_extensions.dart';
@@ -71,14 +72,49 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
       builder: (_) => const _DrinkTypeSheet(),
     );
     if (!mounted || res == null) return;
+
+    // A foto é obrigatória para registrar a bebida.
+    final source = await showModalBottomSheet<_PhotoSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PhotoSourceSheet(),
+    );
+    if (!mounted || source == null) return;
+
     try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == _PhotoSource.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+      // Cancelou a foto -> não registra a bebida.
+      if (file == null) return;
+
+      final identity = ref.read(identityProvider);
+      final storage = ref.read(storageServiceProvider);
+      final url = await storage.uploadDrinkPhoto(identity.anonId!, file);
       await ref
           .read(groupSessionProvider(code).notifier)
-          .addDrink(drinkType: res.type?.id);
+          .addDrinkWithPhoto(drinkType: res.type?.id, photoUrl: url);
+      if (_mounted) context.showSnack('Bebida registrada! 🍻');
+    } on PostgrestException catch (e) {
+      if (_mounted) {
+        context.showSnack(
+          e.code == '42501'
+              ? 'A competição já encerrou.'
+              : 'Não foi possível registrar a bebida.',
+          isError: true,
+        );
+      }
+      debugPrint('[GroupHome] falha ao adicionar bebida: $e');
     } catch (e) {
       if (_mounted) {
         context.showSnack(
-          'Não foi possível registrar: a competição já encerrou.',
+          'Não foi possível registrar a bebida. Tente novamente.',
           isError: true,
         );
       }
@@ -109,6 +145,51 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
         );
       }
       debugPrint('[GroupHome] falha ao adicionar foto: $e');
+    }
+  }
+
+  /// Troca a foto de perfil tocando no avatar do mini-dashboard.
+  Future<void> _changeProfilePhoto(String code) async {
+    final source = await showModalBottomSheet<_PhotoSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PhotoSourceSheet(),
+    );
+    if (!mounted || source == null) return;
+
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(
+        source: source == _PhotoSource.camera
+            ? ImageSource.camera
+            : ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 80,
+      );
+      if (file == null) return;
+
+      final identity = ref.read(identityProvider);
+      final storage = ref.read(storageServiceProvider);
+      final url = await storage.uploadAvatar(identity.anonId!, file);
+      await ref
+          .read(groupSessionProvider(code).notifier)
+          .updateProfilePhoto(url);
+      // Persiste a foto também no perfil local (nome/account preservados).
+      final me = ref.read(groupSessionProvider(code)).me;
+      await ref.read(identityProvider.notifier).saveProfile(
+            name: me?.name ?? identity.savedName,
+            photoUrl: url,
+          );
+      if (_mounted) context.showSnack('Foto de perfil atualizada! 📸');
+    } catch (e) {
+      if (_mounted) {
+        context.showSnack(
+          'Não foi possível atualizar a foto de perfil.',
+          isError: true,
+        );
+      }
+      debugPrint('[GroupHome] falha ao trocar foto de perfil: $e');
     }
   }
 
@@ -175,12 +256,37 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                       children: [
                         Row(
                           children: [
-                            AppAvatar(
-                              photoUrl: me.photoUrl,
-                              name: me.name,
-                              radius: 30,
-                              isCreator: me.isCreator,
-                              hasGradientRing: me.id == session.leader?.id,
+                            GestureDetector(
+                              onTap: () => _changeProfilePhoto(code),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  AppAvatar(
+                                    photoUrl: me.photoUrl,
+                                    name: me.name,
+                                    radius: 30,
+                                    isCreator: me.isCreator,
+                                    isLeader: me.id == session.leader?.id,
+                                    hasGradientRing: me.id == session.leader?.id,
+                                  ),
+                                  Positioned(
+                                    bottom: -2,
+                                    right: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        color: context.cs.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.camera_alt,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
@@ -321,7 +427,8 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                                 photoUrl: p.photoUrl,
                                 name: p.name,
                                 radius: 22,
-                                isCreator: p.isCreator),
+                                isCreator: p.isCreator,
+                                isLeader: p.id == session.leader?.id),
                             const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
@@ -436,6 +543,70 @@ class _StatCell extends StatelessWidget {
 class _DrinkPickResult {
   final DrinkTypeDef? type;
   const _DrinkPickResult(this.type);
+}
+
+/// Origem da foto obrigatória da bebida.
+enum _PhotoSource { camera, gallery }
+
+/// Popup de origem da foto obrigatória da bebida.
+class _PhotoSourceSheet extends StatelessWidget {
+  const _PhotoSourceSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Material(
+        color: context.cs.surfaceContainerLow,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text('📸 Foto da bebida',
+                      style: context.tt.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Obrigatória para registrar a bebida.',
+                style: context.tt.bodySmall
+                    ?.copyWith(color: context.cs.onSurfaceVariant),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context, _PhotoSource.camera),
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: const Text('Tirar foto agora'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.pop(context, _PhotoSource.gallery),
+                  icon: const Icon(Icons.photo_library_outlined),
+                  label: const Text('Escolher da galeria'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Popup opcional exibido ao tocar em "+1 BEBIDA".

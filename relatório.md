@@ -312,3 +312,128 @@ Migração `enforce_active_competition_insert` aplicada; políticas verificadas 
 - `flutter build web --release` → ✅ compila.
 
 ---
+
+# 14. CHANGELOG — 2026-08-10 (rodada 7 — re-vínculo de sessão no login por conta)
+
+## ✅ 14.1 Bug — `403` ao registrar bebida/foto após login por conta (nome+senha)
+
+- **Sintoma:** `POST /ctg_drinks` → 403 `PostgrestException(42501)` (violação de RLS)
+  ao tocar em `+1 BEBIDA`, mesmo sendo membro do grupo e a competição ativa.
+- **Causa raiz:** a **sessão anônima** é a identidade do RLS (`auth.uid()`). As
+  policies de insert de `ctg_drinks`/`ctg_photos` exigem `p.anon_id = auth.uid()`.
+  Porém quem volta por **conta** (nome+senha) pode estar em uma sessão anônima
+  nova (outro navegador/dispositivo); o participante mantinha o `anon_id` antigo
+  → `auth.uid() != anon_id` → insert bloqueado.
+- **Correção (backend, sem mudança no Flutter):** `ctg_login_account` passou a,
+  após validar a senha, re-vincular `ctg_participants.anon_id = auth.uid()` para
+  todas as participações da conta (guarda `NOT EXISTS` evita conflito com a
+  unique `(group_id, anon_id)`). O re-vínculo só ocorre com senha correta
+  (imune a spoofing — `ctg_participants` tem leitura pública).
+- **Backfill imediato:** `ctg_participants` do `dandan` (grupo Fazenda `LTQPKQ`)
+  atualizado para a sessão anônima ativa `a0a8708d-…` (volta a escrever ainda sem
+  novo login). Corrige **bebidas e fotos**.
+- **Migration:** `bind_anon_on_account_login`.
+- **Trade-off (documentado):** o último dispositivo que logar com a conta detém o
+  vínculo de escrita (anon = sessão do dispositivo).
+
+## Verificação
+- Migration `bind_anon_on_account_login` aplicada; `pg_get_functiondef`
+  confirma o bloco de re-vínculo.
+- Backfill confirmado por `RETURNING` (`anon_id` = sessão atual).
+- Teste manual recomendado: `flutter run -d chrome` → entrar em Fazenda com a
+  conta `dandan` → `+1 BEBIDA` deve registrar (sem 403).
+
+---
+
+# 15. CHANGELOG — 2026-08-10 (rodada 8 — foto obrigatória ao registrar bebida)
+
+## ✅ 15.1 Fluxo "+1 BEBIDA" agora exige foto
+- **Problema/objetivo:** bebida podia ser registrada sem nenhuma comprovação
+  visual.
+- **Mudança de fluxo (`group_home_page.dart`):** ao tocar em `+1 BEBIDA`,
+  depois de escolher o tipo (opcional), o app pergunta a **origem da foto**
+  (📷 tirar agora / 🖼️ galeria) e **cancela tudo** se a foto for cancelada.
+  Só então insere a bebida **e** a foto, vinculadas por `ctg_photos.drink_id`.
+- **`drink_repository.dart`:** `addDrink` agora devolve o `id` criado
+  (`.select('id').single()`), permitindo o vínculo da foto.
+- **`group_session_provider.dart`:** `addDrink` foi substituído por
+  `addDrinkWithPhoto({drinkType, note, required photoUrl})` — insere a bebida,
+  obtém o id e insere a foto com `drink_id`; sem foto não há bebida (regra
+  centralizada no provider, não apenas na tela).
+- **Mensagens de erro mais precisas:** RLS `42501` → "A competição já
+  encerrou."; demais falhas → mensagem genérica (antes qualquer erro virava
+  "competição encerrou", o que confundia com falha de upload/rede).
+- O botão **"Adicionar Foto"** (foto solta, sem bebida) continua funcionando.
+
+## Verificação
+- `flutter test` → ✅ 119/119 passam.
+- `flutter build web --release` → ✅ compila.
+- Teste manual sugerido: `flutter run -d chrome` → `+1 BEBIDA` → cancelar a
+  foto deve **não** registrar bebida; completar com foto deve registrar bebida
+  + foto no álbum/feed.
+
+---
+
+# 16. CHANGELOG — 2026-08-10 (rodada 9 — sistema de títulos com patamares fixos)
+
+## ✅ 16.1 Títulos — híbrido: iniciais proporcionais + fixos a partir da Lenda
+- **Pedido:** manter `Aprendiz`, `Cachaceiro` e `Rei do Boteco` como estão
+  (proporcionais à meta do grupo) e, **a partir da Lenda**, subir a dificuldade
+  com patamares **fixos em copos**.
+- **Novas faixas (`title_system.dart`):**
+  - Aprendiz 🍺 · Cachaceiro 🍻 · Rei do Boteco 👑 — **inalterados** (% do goal)
+  - Lenda 💀 **20+** · Imperador do Copo 🏆 **30+** · Mito do Bar 🔥 **40+** ·
+    Deus da Geladeira 👑👑 **50+** · Farmador de aura ✨ **67+** ·
+    Alcoólatra Supremo 🍾 **76+** · O Sigma Verdadeiro 🐺 **88+** ·
+    Papo de Reabilitação 🙏 **99+**
+- **Implementação:** `TitleTier` ganhou `absoluteMin` (piso em copos); o patamar
+  efetivo é `max(percentual da meta, piso fixo)`. Novo `thresholdsFor(maxGoal)`
+  aplica **carry-forward** para garantir patamares monotônicos — uma meta alta
+  nunca faz um título exigir menos que o anterior (conflito inerente ao misturar
+  `%` com valores fixos, resolvido para qualquer meta).
+- Sem mudanças de API pública (`currentTier`/`nextTier`/`progressToNext`/`tiers`
+  continuam os mesmos) → demandas em home, ranking e stats mantidas.
+
+## Verificação
+- `flutter test` → ✅ 120/120 (title_system_test reescrito p/ o híbrido).
+- `flutter build web --release` → ✅ compila.
+
+---
+
+# 17. CHANGELOG — 2026-08-10 (rodada 10 — títulos fixos em copos, foto de perfil, coroa p/ líder)
+
+## ✅ 17.1 Títulos 100% por quantidade de copos (não %)
+- **Pedido:** confirmado que os títulos são por **quantidade absoluta de copos**
+  (notação `+`), não percentual da meta.
+- **`title_system.dart`:** removida a lógica de `%`; todos os patamares são fixos:
+  Aprendiz 🍺 **5** · Cachaceiro 🍻 **10** · Rei do Boteco 👑 **15** · Lenda 💀 **20** ·
+  Imperador do Copo 🏆 **30** · Mito do Bar 🔥 **40** · Deus da Geladeira 👑👑 **50** ·
+  Farmador de aura ✨ **67** · Alcoólatra Supremo 🍾 **76** · O Sigma Verdadeiro 🐺 **88** ·
+  Papo de Reabilitação 🙏 **99**.
+  - Os 3 primeiros (Aprendiz/Cachaceiro/Rei) tinham valores indefinidos pelo usuário;
+    adotados 5/10/15 para encaixar com a Lenda 20 (ajuste fácil se desejar).
+  - `requiredDrinks` não depende mais da meta; `maxGoal` continua usado no
+    restante do app (objetivo/competição).
+- `test/title_system_test.dart` reescrito (todos os casos por copos fixos).
+
+## ✅ 17.2 Foto de perfil editável pelo mini-dashboard
+- Tocando no **seu avatar** (mini-dashboard do grupo) abre a escolha de origem da
+  foto (📷 agora / 🖼️ galeria), faz upload como **avatar** e atualiza
+  `ctg_participants.photo_url` (via `updateProfilePhoto` no
+  `group_session_provider`) + perfil local (`identityProvider.saveProfile`).
+- Pequeno selo de 📷 câmera no canto do avatar indica que é tocável.
+- RLS: `ctg_part_update` exige `anon_id = auth.uid()` — ok para o participante
+  logado (mesma regra do re-vínculo da rodada 7).
+
+## ✅ 17.3 Coroa para o 1º lugar; criador marcado com escudo
+- **Problema:** a coroa 👑 aparecia no avatar do **criador** do grupo.
+- **`app_avatar.dart`:** novo `isLeader` → **👑** no avatar de quem está em 1º;
+  `isCreator` agora mostra **🛡️** (escudo) no canto oposto.
+- Aplicado em `group_home_page` (card do usuário + lista) e `ranking_page`
+  (lista + pódio: `isLeader: place == 1`).
+
+## Verificação
+- `flutter test` → ✅ 120/120.
+- `flutter build web --release` → ✅ compila.
+
+---
