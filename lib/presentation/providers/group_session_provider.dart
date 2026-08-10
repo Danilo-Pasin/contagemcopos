@@ -72,6 +72,9 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
   IdentityNotifier get _identity => _ref.read(identityProvider.notifier);
 
   Timer? _refreshTimer;
+  Timer? _refreshDebounce;
+  bool _refreshInFlight = false;
+  bool _refreshQueued = false;
   RealtimeChannel? _rankingChannel;
   RealtimeChannel? _feedChannel;
 
@@ -119,12 +122,62 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       _subscribeRealtime(group.id);
       // Polling de segurança a cada 20s (garante atualização)
       _refreshTimer = Timer.periodic(const Duration(seconds: 20), (_) {
-        if (state.hasGroup) _refreshAll();
+        if (state.hasGroup) _scheduleRefresh();
       });
     } catch (e) {
       debugPrint('[GroupSession] ERRO init: $e');
       state = GroupSessionState(loading: false, error: e.toString());
     }
+  }
+
+  /// Agenda um refresh coalescido (usado por realtime e polling).
+  ///
+  /// Bursts de eventos (ex.: uma bebida gera inserts em ctg_drinks,
+  /// ctg_photos e ctg_activity_log) viram um único refresh.
+  void _scheduleRefresh() {
+    _refreshDebounce?.cancel();
+    _refreshDebounce = Timer(const Duration(milliseconds: 400), _runRefresh);
+  }
+
+  /// Executa um refresh respeitando o refresh que já está em voo.
+  Future<void> _runRefresh() async {
+    if (_refreshInFlight) {
+      _refreshQueued = true;
+      return;
+    }
+    _refreshInFlight = true;
+    try {
+      await _refreshAll();
+    } finally {
+      _refreshInFlight = false;
+      if (_refreshQueued) {
+        _refreshQueued = false;
+        _scheduleRefresh();
+      }
+    }
+  }
+
+  bool _sameRanking(List<ParticipantEntity> a, List<ParticipantEntity> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id ||
+          a[i].totalDrinks != b[i].totalDrinks ||
+          a[i].name != b[i].name ||
+          a[i].photoUrl != b[i].photoUrl) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _sameFeed(List<ActivityItem> a, List<ActivityItem> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id || a[i].createdAt != b[i].createdAt) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<void> _refreshAll() async {
@@ -137,6 +190,18 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       if (me != null) {
         final fresh = ranking.where((p) => p.id == me!.id);
         if (fresh.isNotEmpty) me = fresh.first;
+      }
+      // Só notifica os listeners se algo mudou de verdade — evita o rebuild
+      // de todas as telas a cada evento de realtime sem diferença real.
+      final prev = state;
+      final meChanged = me?.id != prev.me?.id ||
+          me?.totalDrinks != prev.me?.totalDrinks ||
+          me?.name != prev.me?.name ||
+          me?.photoUrl != prev.me?.photoUrl;
+      if (_sameRanking(prev.ranking, ranking) &&
+          _sameFeed(prev.feed, feed) &&
+          !meChanged) {
+        return;
       }
       state = state.copyWith(ranking: ranking, feed: feed, me: me, clearError: true);
     } catch (e, s) {
@@ -159,7 +224,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
             column: 'group_id',
             value: groupId,
           ),
-          callback: (_) => _refreshAll(),
+          callback: (_) => _scheduleRefresh(),
         )
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -170,7 +235,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
             column: 'group_id',
             value: groupId,
           ),
-          callback: (_) => _refreshAll(),
+          callback: (_) => _scheduleRefresh(),
         )
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
@@ -181,7 +246,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
             column: 'group_id',
             value: groupId,
           ),
-          callback: (_) => _refreshAll(),
+          callback: (_) => _scheduleRefresh(),
         )
         .subscribe();
 
@@ -196,7 +261,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
             column: 'group_id',
             value: groupId,
           ),
-          callback: (_) => _refreshAll(),
+          callback: (_) => _scheduleRefresh(),
         )
         .subscribe();
   }
@@ -247,7 +312,10 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       url: photoUrl,
       drinkId: drinkId,
     );
-    await _refreshAll();
+    // O realtime do ctg_drinks/ctg_photos/ctg_activity_log já cobre a
+    // atualização (coalescida). O schedule abaixo é só rede de segurança
+    // caso o evento seja perdido — sai barato com o debounce.
+    _scheduleRefresh();
   }
 
   /// Adiciona uma foto ao álbum.
@@ -260,7 +328,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       participantId: me.id,
       url: url,
     );
-    await _refreshAll();
+    _scheduleRefresh();
   }
 
   /// Atualiza a foto de perfil do participante atual.
@@ -268,16 +336,17 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
     final me = state.me;
     if (me == null) return;
     await _groupRepo.updateParticipantPhoto(me.id, url);
-    await _refreshAll();
+    _scheduleRefresh();
   }
 
-  Future<void> refresh() => _refreshAll();
+  Future<void> refresh() => _runRefresh();
 
   @override
   void dispose() {
     _rankingChannel?.unsubscribe();
     _feedChannel?.unsubscribe();
     _refreshTimer?.cancel();
+    _refreshDebounce?.cancel();
     super.dispose();
   }
 }

@@ -4,7 +4,7 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Contagem — Competição social de bebidas entre amigos. Crie grupos, registre suas bebidas, suba no ranking e divirta-se.">
 
@@ -24,6 +24,11 @@
 
   <style>
     html, body { margin: 0; padding: 0; height: 100%; background: #0B0E14; }
+    /* Bloqueia o double-tap tool do Safari (smart-zoom). No PWA iOS isso
+       dessincroniza o hit-test do canvas do Flutter ("botões não respondem
+       / registram o toque no botão de baixo") após focar um TextField.
+       O iOS ignora user-scalable=no, então a trava robusta é touch-action. */
+    html, body { touch-action: manipulation; }
     #splash {
       position: fixed; inset: 0; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 18px;

@@ -55,10 +55,12 @@ class FeedPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => _FeedTile(item: feed[index])
-                      .animate()
-                      .fadeIn(delay: (index * 50).ms)
-                      .slideY(begin: 0.08, duration: 350.ms),
+                  (context, index) => RepaintBoundary(
+                    child: _FeedTile(item: feed[index])
+                        .animate()
+                        .fadeIn(delay: (index * 50).ms)
+                        .slideY(begin: 0.08, duration: 350.ms),
+                  ),
                   childCount: feed.length,
                 ),
               ),
@@ -131,6 +133,7 @@ class _FeedTile extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: item.photoUrl!,
                     fit: BoxFit.cover,
+                    memCacheWidth: 640,
                     placeholder: (_, __) => Container(
                       color: context.cs.surfaceContainerHighest,
                       child: const Center(

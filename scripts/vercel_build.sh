@@ -27,7 +27,7 @@ cd "$ROOT"
 echo "==> flutter pub get"
 flutter pub get
 
-echo "==> flutter build web --release"
-flutter build web --release --base-href /
+echo "==> flutter build web --release --wasm"
+flutter build web --release --wasm --base-href /
 
 echo "==> Build concluído."

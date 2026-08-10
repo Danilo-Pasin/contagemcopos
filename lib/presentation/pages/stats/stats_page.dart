@@ -96,6 +96,15 @@ class _StatsPageState extends ConsumerState<StatsPage> {
     }
   }
 
+  /// Recarrega as estatísticas (pull-to-refresh).
+  Future<void> _reload(
+    String groupId,
+    List<ParticipantEntity> ranking,
+  ) async {
+    _loadedKey = null;
+    await _loadStats(groupId, ranking);
+  }
+
   @override
   Widget build(BuildContext context) {
     final code = _extractCode(context);
@@ -105,11 +114,11 @@ class _StatsPageState extends ConsumerState<StatsPage> {
 
     // Carrega as estatísticas assim que o grupo estiver disponível
     // (evita ficar preso em loading se a sessão ainda não carregou).
-    // Recarrega quando há novos drinks (total do grupo muda).
+    // Recarrega apenas uma vez por grupo (ou com pull-to-refresh), em vez
+    // de refazer o SELECT completo a cada nova bebida.
     final groupId = session.group?.id;
-    final key = '$groupId::${session.totalGroupDrinks}';
-    if (groupId != null && key != _loadedKey) {
-      _loadedKey = key;
+    if (groupId != null && groupId != _loadedKey) {
+      _loadedKey = groupId;
       _loadStats(groupId, ranking);
     }
 
@@ -139,8 +148,10 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         .where((a) => a.type.toString().contains('photo')).length;
 
     return ResponsiveContent(
-      child: CustomScrollView(
-        slivers: [
+      child: RefreshIndicator(
+        onRefresh: () => _reload(groupId!, ranking),
+        child: CustomScrollView(
+          slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight + 8)),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -235,6 +246,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xxl)),
       ],
+    ),
     ),
     );
   }

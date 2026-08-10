@@ -1,6 +1,5 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Design System — tema light e dark do app Contagem.
 ///
@@ -67,7 +66,7 @@ class AppTheme {
         ),
         useMaterial3: true,
         visualDensity: VisualDensity.standard,
-        fontFamily: GoogleFonts.inter().fontFamily,
+        fontFamily: 'Inter',
       );
 
   static ThemeData dark() => FlexThemeData.dark(
@@ -100,6 +99,6 @@ class AppTheme {
         ),
         useMaterial3: true,
         visualDensity: VisualDensity.standard,
-        fontFamily: GoogleFonts.inter().fontFamily,
+        fontFamily: 'Inter',
       );
 }

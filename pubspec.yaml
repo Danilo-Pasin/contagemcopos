@@ -18,7 +18,6 @@ dependencies:
 
   # Tema & UI
   flex_color_scheme: ^8.0.2
-  google_fonts: ^6.2.1
   gap: ^3.0.1
   cached_network_image: ^3.4.1
   flutter_animate: ^4.5.2
@@ -51,3 +50,7 @@ flutter:
   assets:
     - assets/logo.png
     - web/icons/
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf

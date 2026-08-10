@@ -27,10 +27,6 @@ Future<void> main() async {
 
   await initSupabase();
 
-  // Carrega os símbolos de data/hora em pt_BR (ex.: "05/01", "d MMM").
-  // Sem isso, DateFormat(..., 'pt_BR') lança LocaleDataException em runtime.
-  await initializeDateFormatting('pt_BR', null);
-
   final prefs = await SharedPreferences.getInstance();
 
   runApp(
@@ -41,4 +37,13 @@ Future<void> main() async {
       child: const ContagemApp(),
     ),
   );
+
+  // Carrega os símbolos de data/hora em pt_BR (ex.: "05/01", "d MMM").
+  // Sem isso, DateFormat(..., 'pt_BR') lança LocaleDataException em runtime.
+  // Roda após o primeiro frame para não bloquear o paint inicial com o
+  // pacote de ICU; as primeiras formatações acontecem depois que a rede
+  // responde, quando o carregamento já terminou.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    initializeDateFormatting('pt_BR', null);
+  });
 }

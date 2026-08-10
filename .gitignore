@@ -33,6 +33,15 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Migration one-off (projeto Supabase dedicado): dump de storage local
+migration_to_new_project/storage_files/
+
+# Dados pessoais dos usuários migrados (nomes, hashes de senha, URLs de foto).
+# Repositório é PÚBLICO — não versionar. Já aplicados no projeto novo
+# (qzfqkldzvoqvxytvaoaa); recuperáveis do projeto antigo se necessário.
+supabase/migrations/20260810000002_contagem_data.sql
+supabase/migrations/20260810000003_contagem_accounts.sql
+
 # Symbolication related
 app.*.symbols
 

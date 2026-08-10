@@ -39,6 +39,13 @@ class _EnterGroupPageState extends ConsumerState<EnterGroupPage> {
     final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Entrar em um grupo'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(AppRoutes.home),
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: isDark ? AppGradients.hero : AppGradients.heroLight,
@@ -55,16 +62,6 @@ class _EnterGroupPageState extends ConsumerState<EnterGroupPage> {
                     Icon(Icons.group_add_rounded,
                         size: 52, color: fg.withValues(alpha: 0.8)),
                     const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      'Entrar em um grupo',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: fg,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Digite o código que você recebeu para entrar.\nEle normalmente tem 6 letras e números.',
                       textAlign: TextAlign.center,

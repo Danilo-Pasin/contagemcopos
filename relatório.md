@@ -437,3 +437,147 @@ Migração `enforce_active_competition_insert` aplicada; políticas verificadas 
 - `flutter build web --release` → ✅ compila.
 
 ---
+
+# 18. CHANGELOG — 2026-08-10 (rodada 11 — otimização de performance P1–P4)
+
+## ✅ 18.1 Startup: ICU de datas + fonte sem fetch em runtime
+- **`main.dart`:** `initializeDateFormatting('pt_BR')` saiu do caminho do
+  primeiro frame e roda num `addPostFrameCallback` — antes bloqueava o paint
+  inicial carregando o pacote de ICU da `intl`.
+- **Fonte:** removido o `google_fonts` (que baixa a Inter da rede em runtime
+  no web, causando atraso e layout shift). A **Inter variable**
+  (`assets/fonts/Inter-Variable.ttf`, OFL) agora é bundled via `pubspec.yaml`;
+  `app_theme.dart` usa `fontFamily: 'Inter'` nos dois temas.
+- `test/app_theme_test.dart` sem o `google_fonts`; novo teste confere que a
+  Inter vem do bundle.
+
+## ✅ 18.2 Realtime/refresh coalescidos (menos rebuilds)
+- **`group_session_provider.dart`:**
+  - callbacks de realtime (ctg_drinks, ctg_photos, ctg_participants,
+    ctg_activity_log) e o polling de 20s agora passam por `_scheduleRefresh()`
+    — um **debounce de 400ms** que transforma o burst de eventos de uma
+    bebida (até ~3 canais + polling) em **um único refresh**;
+  - `_runRefresh()` tem flag in-flight + re-queue (não concorre com refresh
+    em andamento);
+  - `_refreshAll()` faz **diff** de ranking/feed/`me` antes de setar o state —
+    sem mudança real, não notifica listeners (evita rebuild de todas as telas);
+  - `addDrinkWithPhoto`, `addPhoto` e `updateProfilePhoto` não fazem mais
+    `_refreshAll()` explícito (realtime + schedule cobrem);
+  - `refresh()` (pull-to-refresh) segue executando direto, esperando conclusão.
+
+## ✅ 18.3 Imagens: decodificação no tamanho do elemento
+- `memCacheWidth`/`memCacheHeight` nos `CachedNetworkImage`:
+  - `app_avatar.dart` → 256px (avatares);
+  - `feed_page.dart` → 640px (foto 4:3 do tile);
+  - `album_page.dart` → 400px (grade); viewer mantém a original.
+- Menos CPU/memória para decodificar 1024px+ em elementos pequenos.
+
+## ✅ 18.4 Estatísticas: 1 SELECT por visita (antes: 1 por bebida)
+- **`stats_page.dart`:** a chave de recarga deixou de incluir
+  `totalGroupDrinks` (que disparava o SELECT completo de `ctg_drinks` a cada
+  nova bebida) e passou a ser **por grupo**. A página recarrega ao entrar e
+  por **pull-to-refresh**.
+
+## ✅ 18.5 Build Wasm + isolamento de paint
+- **`scripts/vercel_build.sh`:** `flutter build web --release --wasm`
+  (3MB wasm + bootstrap `main.dart.mjs`) — melhor performance de runtime no
+  web moderno; validado localmente.
+- `feed_page.dart`: itens em `RepaintBoundary` (paint isolado por tile).
+
+## Verificação
+- `flutter test` → ✅ **121/121** (1 novo: fonte Inter bundled).
+- `flutter build web --release --wasm --base-href /` → ✅ compila e gera
+  `main.dart.wasm`/`main.dart.mjs`.
+- **Sem commit** (conforme pedido); mudanças pendentes em working tree.
+
+---
+
+# 19. CHANGELOG — 2026-08-10 (rodada 12 — migração para projeto Supabase dedicado)
+
+## ✅ 19.1 Novo projeto dedicado `contagem`
+- Criado o projeto **`qzfqkldzvoqvxytvaoaa`** (contagem, South America/São
+  Paulo, 2026-08-10) para substituir o compartilhado
+  `cxuurozyyfcqxywhsiyt` (que segue servindo o outro app: matches/pools/
+  countries/profiles).
+- `lib/core/config/app_config.dart` → `supabaseUrl` + `anonKey` novos.
+- Anonymous Auth habilitado no projeto novo.
+
+## ✅ 19.2 Schema/storage/dados copiados e verificados
+- `supabase/migrations/20260810000000_contagem_schema.sql` (tabelas, enums,
+  indices, `ctg_ranking_view`, functions, triggers, RLS + pgcrypto),
+  `..._contagem_storage.sql` (buckets `drinks`/`avatars` + políticas),
+  `..._contagem_data.sql` (dump via `migration_to_new_project/dump_data.py`),
+  `..._contagem_accounts.sql` (14 contas).
+- Dados conferidos no novo: **13 participantes, 78 drinks, 18 fotos, 112
+  activities, 18 achievements, 1 hall_of_fame, 14 contas**, 26 objetos de
+  storage (~3.8MB).
+- URLs de mídia reescritas para o domínio novo; storage copiado via
+  `upload_storage.py` (service_role, `x-upsert: true`).
+
+## ✅ 19.3 Relatime/configuração
+- Publicação `supabase_realtime` no novo: 8 tabelas `ctg_*` (drinks, photos,
+  participants, activity_log, groups, hall_of_fame, participant_achievements,
+  title_history). `ctg_accounts` fica de fora (login via RPC, sem realtime).
+
+## ✅ 19.4 Smoke test end-to-end (REST anon)
+- signup anônimo → lista grupos (`LTQPKQ`, `WECMKA`) → INSERT participante
+  (RLS) → INSERT drink (RLS `ctg_drinks_insert`) → ranking view inclui o
+  participante com total = 1 → triggers `member_joined`/`drink_added` OK.
+- Um 403 observado era artefato do próprio teste (participante de execução
+  anterior com outro `anon_id`); dados de teste removidos do banco novo
+  (bancos revalidados em 13/78/112/18).
+
+## ⚠️ 19.5 Cutover & consequências
+- **Usuários anônimos existentes serão tratados como "novos"** no novo projeto
+  (novo `anon_id`); participantes órfãos duplicados exigem limpeza manual após
+  o cutover real.
+- Contas com nome+senha (`ctg_accounts`) migram íntegras (hash preservado);
+  após login a conta re-vincula `anon_id` às participações via
+  `ctg_login_account`.
+- Projeto antigo segue intacto (rollback disponível).
+
+## Verificação
+- `flutter test` → ✅ **121/121**.
+- `flutter build web --release --wasm --base-href /` → ✅ com `app_config`
+  novo.
+- **Sem commit** (conforme pedido); mudanças pendentes em working tree.
+
+---
+
+# 20. CHANGELOG — 2026-08-10 (rodada 13 — botão voltar no "Entrar em um grupo" + correção de toque no PWA iOS)
+
+## ✅ 20.1 Botão voltar na tela "Entrar em um grupo"
+- `enter_group_page.dart`: a tela de digitar o código (aberta pela home via
+  "Entrar em um grupo") **não tinha como voltar**. Adicionado `AppBar` com
+  seta que retorna à home (`context.go(AppRoutes.home)`), no mesmo padrão das
+  telas de login e de entrar no grupo.
+- Novo teste `test/enter_group_page_test.dart` (1 teste: app bar + voltar → home).
+
+## ✅ 20.2 Toque "dessincronizado" no PWA iOS (botão registra no de baixo)
+- Sintoma: no PWA instalado (não no navegador), depois de focar um `TextField`
+  e dar um **double-tap**, os botões pareciam deslocados (ex.: tocar
+  "+1 BEBIDA" acionava "Adicionar Foto", logo abaixo).
+- Causa: bug conhecido do **Flutter web em PWA iOS**
+  ([flutter/flutter#115829](https://github.com/flutter/flutter/issues/115829),
+  aberto) — o double-tap dispara o *smart-zoom* do Safari, que dessincroniza o
+  hit-test do canvas enquanto o layout fica "menor" (como se o teclado ainda
+  estivesse aberto). Acontece só no PWA, não na aba do navegador.
+- Correção em `web/index.html`:
+  - CSS `html, body { touch-action: manipulation; }` — bloqueia o double-tap
+    zoom (o iOS **ignora** `user-scalable=no`, então esta é a trava eficaz);
+  - viewport `maximum-scale=1.0, user-scalable=no` (Android/outros navegadores).
+- Validar no iPhone: focar campo de texto → fechar teclado → usar os botões.
+
+## 🔒 20.3 Privacidade: repo é PÚBLICO — dados de usuários ficam fora do git
+- `.gitignore` agora exclui `supabase/migrations/20260810000002_
+  contagem_data.sql` e `20260810000003_contagem_accounts.sql` (nomes, hashes
+  de senha, URLs de foto). Já aplicados no projeto novo; recuperáveis do
+  antigo se preciso. Schema/storage (DDL, sem PII) seguem versionados.
+
+## Verificação
+- `flutter test` → ✅ **122/122** (1 novo: `enter_group_page_test.dart`).
+- `flutter build web --release --wasm --base-href /` → ✅
+  (viewport/touch-action presentes no `build/web/index.html`).
+- Deploy: commit em `DEV` → merge em `main` → push (Vercel auto-build).
+
+---

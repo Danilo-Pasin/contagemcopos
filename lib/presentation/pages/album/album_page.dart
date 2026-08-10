@@ -127,6 +127,7 @@ class _PhotoTile extends StatelessWidget {
             CachedNetworkImage(
               imageUrl: photo.url,
               fit: BoxFit.cover,
+              memCacheWidth: 400,
               placeholder: (_, __) => Container(
                 color: context.cs.surfaceContainerHighest,
                 child: const Center(
