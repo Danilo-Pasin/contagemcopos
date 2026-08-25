@@ -1,4 +1,6 @@
 import 'package:contagem/core/router/app_routes.dart';
+import 'package:contagem/core/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -89,28 +91,79 @@ void main() {
   });
 
   group('AppRoutes — branches do StatefulShellRoute (Fase A)', () {
-    test('5 abas na mesma ordem da NavigationBar', () {
-      final code = AppRoutes.group(':code');
-      final branchPaths = [
-        code,
-        '$code/${AppRoutes.feedSegment}',
-        '$code/${AppRoutes.rankingSegment}',
-        '$code/${AppRoutes.statsSegment}',
-        '$code/${AppRoutes.albumSegment}',
-      ];
+    test('branch defaults relativos e SEM parâmetro (assertion do go_router)',
+        () {
+      // Cada branch é filha de /g/:code; os defaults precisam ser rotas
+      // relativas sem parâmetro, senão a assertion do go_router 14.8.1
+      // derruba o app em debug.
+      for (final segment in [
+        AppRoutes.homeSegment,
+        AppRoutes.feedSegment,
+        AppRoutes.rankingSegment,
+        AppRoutes.statsSegment,
+        AppRoutes.albumSegment,
+      ]) {
+        expect(segment, isNot(contains(':')));
+        expect(segment, isNotEmpty);
+        expect(segment, isNot(startsWith('/')));
+      }
+      expect(AppRoutes.homeSegment, 'inicio');
+    });
+
+    test('5 abas na ordem da NavigationBar (/g/:code/segment)', () {
       // Ordem dos destinos: Início, Feed, Ranking, Estatísticas, Álbum.
-      expect(branchPaths[0], '/g/:code');
-      expect(branchPaths[1], endsWith('/feed'));
-      expect(branchPaths[2], endsWith('/ranking'));
-      expect(branchPaths[3], endsWith('/stats'));
-      expect(branchPaths[4], endsWith('/album'));
+      final paths = [
+        '${AppRoutes.groupBase}/:code/${AppRoutes.homeSegment}',
+        '${AppRoutes.groupBase}/:code/${AppRoutes.feedSegment}',
+        '${AppRoutes.groupBase}/:code/${AppRoutes.rankingSegment}',
+        '${AppRoutes.groupBase}/:code/${AppRoutes.statsSegment}',
+        '${AppRoutes.groupBase}/:code/${AppRoutes.albumSegment}',
+      ];
+      expect(paths[0], '/g/:code/inicio');
+      expect(paths[1], endsWith('/feed'));
+      expect(paths[2], endsWith('/ranking'));
+      expect(paths[3], endsWith('/stats'));
+      expect(paths[4], endsWith('/album'));
     });
 
     test('share e hall-of-fame são subrotas da branch Início', () {
-      final code = AppRoutes.group(':code');
-      // Montados a partir da branch 0 (/g/:code), não como branches próprias.
-      expect('$code/${AppRoutes.shareSegment}', '/g/:code/share');
-      expect('$code/${AppRoutes.hallOfFameSegment}', '/g/:code/hall-of-fame');
+      expect(
+          '${AppRoutes.groupBase}/:code/${AppRoutes.shareSegment}',
+          '/g/:code/share');
+      expect(
+          '${AppRoutes.groupBase}/:code/${AppRoutes.hallOfFameSegment}',
+          '/g/:code/hall-of-fame');
+    });
+
+    test('REGRESSÃO: GoRouter instancia sem "branch cannot be parameterized"',
+        () {
+      // Construir o GoRouter em modo debug dispara
+      // _debugCheckStatefulShellBranchDefaultLocations se QUALQUER branch
+      // tiver rota com parâmetro como default. Era exatamente o crash visto
+      // no flutter run -d chrome.
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(() => container.read(appRouterProvider), returnsNormally);
+    });
+
+    group('appRedirect (redirects de nível superior)', () {
+      test('/g sem código → home', () {
+        expect(appRedirect(Uri.parse('/g')), '/');
+      });
+      test('/g/CODE → /g/CODE/inicio (link compartilhável)', () {
+        expect(appRedirect(Uri.parse('/g/AB72XC')), '/g/AB72XC/inicio');
+      });
+      test('abas internas NÃO são redirecionadas', () {
+        expect(appRedirect(Uri.parse('/g/AB72XC/feed')), isNull);
+        expect(appRedirect(Uri.parse('/g/AB72XC/stats')), isNull);
+        expect(appRedirect(Uri.parse('/g/AB72XC/share')), isNull);
+      });
+      test('outras rotas não são afetadas', () {
+        expect(appRedirect(Uri.parse('/')), isNull);
+        expect(appRedirect(Uri.parse('/criar')), isNull);
+        expect(appRedirect(Uri.parse('/entrar/AB72XC')), isNull);
+        expect(appRedirect(Uri.parse('/g/AB72XC/outro')), isNull);
+      });
     });
   });
 }

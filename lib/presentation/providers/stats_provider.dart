@@ -205,7 +205,9 @@ class StatsNotifier extends StateNotifier<StatsState> {
     final expired =
         fetched == null || _now().difference(fetched) > ttl;
     if (!expired) return;
-    _load(staleOk: fetched != null);
+    // Pode ser invocado durante o build da página (ConsumerWidget.build);
+    // adia a mutação de state para fora do ciclo de build.
+    Future.microtask(() => _load(staleOk: fetched != null));
   }
 
   /// Pull-to-refresh: ignora o TTL.

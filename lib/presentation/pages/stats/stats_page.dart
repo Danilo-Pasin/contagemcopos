@@ -78,7 +78,7 @@ class StatsPage extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: AppSpacing.sm,
               crossAxisSpacing: AppSpacing.sm,
-              mainAxisExtent: 108,
+              mainAxisExtent: 122,
             ),
             delegate: SliverChildListDelegate([
               _MetricCard('🍺', 'Total', '$total', const Color(0xFF1FB45C)),
@@ -181,7 +181,7 @@ class _MetricCard extends StatelessWidget {
             ),
             child: Text(emoji, style: const TextStyle(fontSize: 18)),
           ),
-          const Spacer(),
+          const SizedBox(height: AppSpacing.sm),
           Text(value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

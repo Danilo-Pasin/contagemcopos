@@ -19,7 +19,12 @@ class GroupShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final code = _extractCode(context);
 
+    // Fallback: /g sem código (o redirect do router já manda para a home;
+    // aqui garantimos que nunca fique em spinner infinito).
     if (code.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go(AppRoutes.home);
+      });
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

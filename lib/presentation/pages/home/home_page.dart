@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../widgets/add_to_homescreen_prompt.dart';
 import '../../widgets/app_buttons.dart';
 import '../../widgets/app_logo.dart';
 import '../../widgets/responsive_content.dart';
@@ -18,6 +19,14 @@ class HomePage extends ConsumerWidget {
     final identity = ref.watch(identityProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fg = isDark ? Colors.white : const Color(0xFF0E2A1A);
+
+    // Prompt de instalação do PWA (1× por visita à home, até dispensar).
+    // Delay curto para não brigar com as animações de entrada da página.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (context.mounted) AddToHomescreenPrompt.showIfAppropriate(context);
+      });
+    });
 
     return Scaffold(
       body: Container(

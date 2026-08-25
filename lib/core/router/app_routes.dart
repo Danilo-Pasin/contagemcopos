@@ -21,10 +21,15 @@ class AppRoutes {
   static const String login = '/entrar-login';
   static const String loginName = 'login';
 
+  /// Rota fixa usada apenas no redirect de "/g" (sem código) para a home.
+  static const String groupBase = '/g';
+  static const String groupBaseName = 'groupBase';
+
   static String group(String code) => '/g/$code';
   static const String groupName = 'group';
 
   /// Rotas internas do grupo (relativas a /g/:code).
+  static const homeSegment = 'inicio';
   static const feedSegment = 'feed';
   static const rankingSegment = 'ranking';
   static const statsSegment = 'stats';
@@ -32,6 +37,7 @@ class AppRoutes {
   static const shareSegment = 'share';
   static const hallOfFameSegment = 'hall-of-fame';
 
+  static String groupHome(String code) => '/g/$code/$homeSegment';
   static String groupFeed(String code) => '/g/$code/feed';
   static String groupRanking(String code) => '/g/$code/ranking';
   static String groupStats(String code) => '/g/$code/stats';
