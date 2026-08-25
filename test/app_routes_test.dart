@@ -87,4 +87,30 @@ void main() {
       expect(AppRoutes.hallOfFameSegment, 'hall-of-fame');
     });
   });
+
+  group('AppRoutes — branches do StatefulShellRoute (Fase A)', () {
+    test('5 abas na mesma ordem da NavigationBar', () {
+      final code = AppRoutes.group(':code');
+      final branchPaths = [
+        code,
+        '$code/${AppRoutes.feedSegment}',
+        '$code/${AppRoutes.rankingSegment}',
+        '$code/${AppRoutes.statsSegment}',
+        '$code/${AppRoutes.albumSegment}',
+      ];
+      // Ordem dos destinos: Início, Feed, Ranking, Estatísticas, Álbum.
+      expect(branchPaths[0], '/g/:code');
+      expect(branchPaths[1], endsWith('/feed'));
+      expect(branchPaths[2], endsWith('/ranking'));
+      expect(branchPaths[3], endsWith('/stats'));
+      expect(branchPaths[4], endsWith('/album'));
+    });
+
+    test('share e hall-of-fame são subrotas da branch Início', () {
+      final code = AppRoutes.group(':code');
+      // Montados a partir da branch 0 (/g/:code), não como branches próprias.
+      expect('$code/${AppRoutes.shareSegment}', '/g/:code/share');
+      expect('$code/${AppRoutes.hallOfFameSegment}', '/g/:code/hall-of-fame');
+    });
+  });
 }

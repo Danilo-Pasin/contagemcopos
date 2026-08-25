@@ -5,18 +5,26 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../providers/group_session_provider.dart';
-import '../../providers/theme_provider.dart';
 import '../../widgets/glass_card.dart';
 import 'group_app_bar.dart';
 
-/// Shell que envolve as telas internas do grupo com bottom navigation.
+/// Shell persistente das telas internas do grupo com bottom navigation.
+/// Recebe um [StatefulNavigationShell] para que as abas mantenham estado
+/// vivo (IndexedStack) e o provider da sessão sobreviva às transições.
 class GroupShell extends ConsumerWidget {
-  final String code;
-  final Widget child;
-  const GroupShell({super.key, required this.code, required this.child});
+  final StatefulNavigationShell navigationShell;
+  const GroupShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final code = _extractCode(context);
+
+    if (code.isEmpty) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final session = ref.watch(groupSessionProvider(code));
 
     // Se não é membro (mas tem grupo), redireciona para o formulário de
@@ -32,8 +40,6 @@ class GroupShell extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final currentIndex = _currentIndex(context);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -54,10 +60,13 @@ class GroupShell extends ConsumerWidget {
                         style: context.tt.titleMedium),
                   ),
                 )
-              : child,
+              : navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (i) => _onTap(context, i),
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (i) => navigationShell.goBranch(
+          i,
+          initialLocation: i == navigationShell.currentIndex,
+        ),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -89,32 +98,9 @@ class GroupShell extends ConsumerWidget {
     );
   }
 
-  int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    if (location.contains(AppRoutes.feedSegment)) return 1;
-    if (location.contains(AppRoutes.rankingSegment)) return 2;
-    if (location.contains(AppRoutes.statsSegment)) return 3;
-    if (location.contains(AppRoutes.albumSegment)) return 4;
-    return 0;
-  }
-
-  void _onTap(BuildContext context, int i) {
-    switch (i) {
-      case 0:
-        context.go(AppRoutes.group(code));
-        break;
-      case 1:
-        context.go(AppRoutes.groupFeed(code));
-        break;
-      case 2:
-        context.go(AppRoutes.groupRanking(code));
-        break;
-      case 3:
-        context.go(AppRoutes.groupStats(code));
-        break;
-      case 4:
-        context.go(AppRoutes.groupAlbum(code));
-        break;
-    }
+  String _extractCode(BuildContext context) {
+    final uri = GoRouterState.of(context).uri.toString();
+    final match = RegExp(r'/g/([A-Z0-9]+)').firstMatch(uri);
+    return match?.group(1) ?? '';
   }
 }

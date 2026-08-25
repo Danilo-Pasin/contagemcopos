@@ -46,61 +46,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.loginName,
         builder: (_, state) => const LoginGroupPage(),
       ),
-      // Grupo com bottom navigation (shell)
-      ShellRoute(
-        builder: (_, __, child) => child,
-        routes: [
-          GoRoute(
-            path: AppRoutes.group(':code'),
-            name: AppRoutes.groupName,
-            builder: (_, state) => GroupShell(
-              code: state.pathParameters['code']!,
-              child: const GroupHomePage(),
+      // Grupo com bottom navigation persistente (estado vivo entre abas).
+      // A ordem dos branches deve casar com os destinos da NavigationBar
+      // (GroupShell): Início, Feed, Ranking, Estatísticas, Álbum.
+      StatefulShellRoute.indexedStack(
+        builder: (_, __, navigationShell) =>
+            GroupShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: AppRoutes.group(':code'),
+              name: AppRoutes.groupName,
+              builder: (_, __) => const GroupHomePage(),
+              routes: [
+                GoRoute(
+                  path: AppRoutes.shareSegment,
+                  builder: (_, __) => const SharePage(),
+                ),
+                GoRoute(
+                  path: AppRoutes.hallOfFameSegment,
+                  builder: (_, state) => HallOfFamePage(
+                    code: state.pathParameters['code']!,
+                  ),
+                ),
+              ],
             ),
-            routes: [
-              GoRoute(
-                path: AppRoutes.feedSegment,
-                builder: (_, state) => GroupShell(
-                  code: state.pathParameters['code']!,
-                  child: const FeedPage(),
-                ),
-              ),
-              GoRoute(
-                path: AppRoutes.rankingSegment,
-                builder: (_, state) => GroupShell(
-                  code: state.pathParameters['code']!,
-                  child: const RankingPage(),
-                ),
-              ),
-              GoRoute(
-                path: AppRoutes.statsSegment,
-                builder: (_, state) => GroupShell(
-                  code: state.pathParameters['code']!,
-                  child: const StatsPage(),
-                ),
-              ),
-              GoRoute(
-                path: AppRoutes.albumSegment,
-                builder: (_, state) => GroupShell(
-                  code: state.pathParameters['code']!,
-                  child: const AlbumPage(),
-                ),
-              ),
-              GoRoute(
-                path: AppRoutes.shareSegment,
-                builder: (_, state) => GroupShell(
-                  code: state.pathParameters['code']!,
-                  child: const SharePage(),
-                ),
-              ),
-              GoRoute(
-                path: AppRoutes.hallOfFameSegment,
-                builder: (_, state) => HallOfFamePage(
-                  code: state.pathParameters['code']!,
-                ),
-              ),
-            ],
-          ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '${AppRoutes.group(':code')}/${AppRoutes.feedSegment}',
+              builder: (_, __) => const FeedPage(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '${AppRoutes.group(':code')}/${AppRoutes.rankingSegment}',
+              builder: (_, __) => const RankingPage(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '${AppRoutes.group(':code')}/${AppRoutes.statsSegment}',
+              builder: (_, __) => const StatsPage(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '${AppRoutes.group(':code')}/${AppRoutes.albumSegment}',
+              builder: (_, __) => const AlbumPage(),
+            ),
+          ]),
         ],
       ),
     ],

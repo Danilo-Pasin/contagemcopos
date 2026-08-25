@@ -352,7 +352,9 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
 }
 
 /// Provider factory: cria a sessão para um código de grupo.
-final groupSessionProvider = StateNotifierProvider.autoDispose
-    .family<GroupSessionNotifier, GroupSessionState, String>((ref, code) {
+/// Sem autoDispose: a sessão é singleton por grupo e deve sobreviver às
+/// transições entre abas (o dispose() do notifier já limpa timers/channels).
+final groupSessionProvider =
+    StateNotifierProvider.family<GroupSessionNotifier, GroupSessionState, String>((ref, code) {
   return GroupSessionNotifier(ref, code);
 });
