@@ -107,3 +107,36 @@ de criação.
 - `flutter test` → ✅ 147/147 passam.
 - `flutter build web --release` → ✅ compila.
 - Teste manual: abas com estado vivo OK · stats sem crash/overflow · login OK.
+
+---
+
+# CHANGELOG 2026-08-25 — contas nome+senha passam a ser por grupo `[Back-end] [Front-end]`
+
+## ✅ Nomes duplicados entre grupos diferentes agora são permitidos
+Antes: `ctg_accounts` tinha índice único global em `lower(name)` — uma pessoa
+"Danilo" com senha X impedia qualquer outra "danilo" de criar/entrar em
+qualquer grupo. Agora a unicidade vale **apenas dentro de cada grupo**.
+
+**Migração `accounts_scoped_by_group`:**
+- Removido `ctg_accounts_name_key` (unique em `lower(name)`).
+- Novo RPC `ctg_ensure_account(p_name, p_password, p_group_id)`:
+  - nome já participante DESTE grupo → valida senha (hash) e devolve o id;
+    senha errada → erro "Já existe alguém como X neste grupo com outra senha."
+  - mesmo nome+senha já existente (outra conta) → reaproveita a conta
+    (mesma pessoa em vários grupos compartilha credenciais);
+  - caso contrário → cria conta nova.
+- `ctg_login_account(p_name, p_password, p_group_id default null)`: se houver
+  mais de uma conta com mesmo nome+senha, prefere a que participa do grupo
+  informado. Re-vinculação de anon_id mantida.
+
+**Frontend:**
+- `group_repository.ensureAccount({name, password, groupId})` — chamada única
+  ao novo RPC (removida a dupla login+create); import postgrest removido.
+- Call sites atualizados com `groupId`: `create_group_page`, `join_group_page`
+  e `login_page`.
+
+## Verificação
+- Smoke test SQL (com rollback): criação · recusa no mesmo grupo · duplicata
+  permitida entre grupos · reaproveitamento de credenciais · login por grupo —
+  todos OK, sem vazamento de dados de teste.
+- `flutter test` → ✅ 147/147 · `flutter build web --release` → ✅.

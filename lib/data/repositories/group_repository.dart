@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:postgrest/postgrest.dart';
 import '../../domain/entities/group_entity.dart';
 import '../../domain/entities/participant_entity.dart';
 import '../models/group_model.dart';
@@ -110,36 +109,25 @@ class GroupRepository {
     return ParticipantModel(data as Map<String, dynamic>).toEntity();
   }
 
-  /// Garante que existe uma conta (name + password).
+  /// Garante a conta nome+senha no escopo de um grupo.
   ///
-  /// A senha nunca trafega/é lida diretamente: o banco só devolve o id
-  /// (via RPC `ctg_login_account`/`ctg_create_account`, que compara hashes).
-  ///
-  /// - Se a conta existe e a senha bate, devolve o id.
-  /// - Se a conta não existe, cria e devolve o id.
-  /// - Se a conta existe mas a senha difere (ou acesso negado), lança erro.
+  /// O mesmo nome pode existir em grupos diferentes com senhas diferentes:
+  /// - Se já há participante com esse nome DESTE grupo: valida a senha
+  ///   (hash comparado no banco) e devolve o id; senha errada lança erro.
+  /// - Mesmo nome+senha já existente em outra conta: reaproveita
+  ///   (mesma pessoa em vários grupos compartilha credenciais).
+  /// - Caso contrário: cria conta nova.
   Future<String> ensureAccount({
     required String name,
     required String password,
+    required String groupId,
   }) async {
-    final trimmed = name.trim();
-
-    final loggedId = await _client.rpc('ctg_login_account', params: {
-      'p_name': trimmed,
+    final accountId = await _client.rpc('ctg_ensure_account', params: {
+      'p_name': name.trim(),
       'p_password': password,
+      'p_group_id': groupId,
     });
-    if (loggedId != null) return loggedId as String;
-
-    try {
-      final createdId = await _client.rpc('ctg_create_account', params: {
-        'p_name': trimmed,
-        'p_password': password,
-      });
-      return createdId as String;
-    } on PostgrestException catch (e) {
-      throw Exception(e.message ??
-          'Senha incorreta para "$trimmed". Se é novo, use outro nome.');
-    }
+    return accountId as String;
   }
 
   /// Lista participantes com total de bebidas (via ctg_ranking_view).

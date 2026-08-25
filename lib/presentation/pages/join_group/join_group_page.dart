@@ -155,6 +155,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
       final accountId = await groupRepo.ensureAccount(
         name: _nameCtrl.text.trim(),
         password: _passCtrl.text,
+        groupId: group.id,
       );
 
       // Já é membro do grupo com essa conta? Entra direto.

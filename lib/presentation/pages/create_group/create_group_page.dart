@@ -155,6 +155,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
       final accountId = await groupRepo.ensureAccount(
         name: _nameCtrl.text.trim(),
         password: _passCtrl.text,
+        groupId: group.id,
       );
 
       final participant = await groupRepo.joinGroup(

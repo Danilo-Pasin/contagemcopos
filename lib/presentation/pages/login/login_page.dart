@@ -63,6 +63,7 @@ class _LoginGroupPageState extends ConsumerState<LoginGroupPage> {
       final accountId = await groupRepo.ensureAccount(
         name: _nameCtrl.text.trim(),
         password: _passCtrl.text,
+        groupId: group.id,
       );
 
       final me = await groupRepo.findMemberByAccount(group.id, accountId);
