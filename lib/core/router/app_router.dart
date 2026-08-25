@@ -87,7 +87,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '${AppRoutes.group(':code')}/${AppRoutes.statsSegment}',
-              builder: (_, __) => const StatsPage(),
+              builder: (_, state) =>
+                  StatsPage(code: state.pathParameters['code']!),
             ),
           ]),
           StatefulShellBranch(routes: [

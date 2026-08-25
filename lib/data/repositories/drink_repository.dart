@@ -92,4 +92,14 @@ class DrinkRepository {
         .eq('group_id', groupId);
     return (data as List).cast<Map<String, dynamic>>();
   }
+
+  /// Linhas brutas de bebidas do grupo para agregação de estatísticas
+  /// (por dia e por pessoa/tipo). A agregação vive no statsProvider.
+  Future<List<Map<String, dynamic>>> fetchStatsRaw(String groupId) async {
+    final data = await _client
+        .from('ctg_drinks')
+        .select('created_at, drink_type, participant_id')
+        .eq('group_id', groupId);
+    return (data as List).cast<Map<String, dynamic>>();
+  }
 }

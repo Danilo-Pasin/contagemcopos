@@ -9,6 +9,7 @@ import '../../domain/entities/group_entity.dart';
 import '../../domain/entities/participant_entity.dart';
 import 'core_providers.dart';
 import 'identity_provider.dart';
+import 'stats_provider.dart';
 
 /// Estado completo da sessão de um grupo.
 class GroupSessionState {
@@ -316,6 +317,7 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
     // atualização (coalescida). O schedule abaixo é só rede de segurança
     // caso o evento seja perdido — sai barato com o debounce.
     _scheduleRefresh();
+    _invalidateStats();
   }
 
   /// Adiciona uma foto ao álbum.
@@ -329,6 +331,14 @@ class GroupSessionNotifier extends StateNotifier<GroupSessionState> {
       url: url,
     );
     _scheduleRefresh();
+    _invalidateStats();
+  }
+
+  /// Invalida o cache de estatísticas (se a aba já foi visitada), forçando
+  /// refetch na próxima leitura. Sem efeito se nunca observado (autoDispose).
+  void _invalidateStats() {
+    if (!_ref.exists(statsProvider(_code))) return;
+    _ref.read(statsProvider(_code).notifier).invalidate();
   }
 
   /// Atualiza a foto de perfil do participante atual.
