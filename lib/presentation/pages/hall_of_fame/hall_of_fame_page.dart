@@ -113,8 +113,11 @@ class _HallOfFamePageState extends ConsumerState<HallOfFamePage> {
                         ),
                       )
                           .animate()
-                          .fadeIn(delay: (index * 60).ms)
-                          .slideX(begin: 0.05);
+                          .fadeIn(
+                              delay: Duration(
+                                  milliseconds:
+                                  index * AppMotion.staggerMs))
+                          .slideX(begin: 0.05, duration: AppMotion.entrance);
                     },
                   ),
         ),

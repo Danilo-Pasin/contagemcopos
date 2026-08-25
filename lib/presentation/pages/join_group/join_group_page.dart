@@ -225,7 +225,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                           '🍻',
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 56),
-                        ).animate().scale(duration: 500.ms),
+                        ).animate().scale(duration: AppMotion.entrance),
                         const SizedBox(height: AppSpacing.md),
                         Text(
                           _groupName ?? '',
@@ -252,7 +252,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                               radius: 48,
                             ),
                           ),
-                        ).animate().fadeIn(delay: 200.ms),
+                        ).animate().fadeIn(delay: AppMotion.fast),
                         TextButton(
                           onPressed: _pickPhoto,
                           child: const Text('Adicionar foto (opcional)'),
@@ -268,7 +268,9 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                             prefixIcon: Icon(Icons.person_outline),
                           ),
                           onChanged: (_) => setState(() {}),
-                        ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                        ).animate().fadeIn(
+                            delay: const Duration(milliseconds: 80)).slideY(
+                            begin: 0.1, duration: AppMotion.normal),
                         const SizedBox(height: AppSpacing.md),
                         TextField(
                           controller: _passCtrl,
@@ -288,7 +290,9 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                             ),
                           ),
                           onChanged: (_) => setState(() {}),
-                        ).animate().fadeIn(delay: 380.ms).slideY(begin: 0.1),
+                        ).animate().fadeIn(
+                            delay: const Duration(milliseconds: 120)).slideY(
+                            begin: 0.1, duration: AppMotion.normal),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           'Já participa deste grupo? Use o MESMO nome e senha '
@@ -302,7 +306,9 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                           icon: Icons.login_rounded,
                           loading: _joining,
                           onPressed: _canJoin ? _join : null,
-                        ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2),
+                        ).animate().fadeIn(
+                            delay: const Duration(milliseconds: 160)).slideY(
+                            begin: 0.2, duration: AppMotion.normal),
                       ],
                     ),
                   ),

@@ -65,10 +65,10 @@ class HomePage extends ConsumerWidget {
                       const AppLogo()
                           .animate()
                           .scale(
-                              duration: 600.ms,
+                              duration: Duration(milliseconds: 400),
                               curve: Curves.elasticOut,
                               begin: const Offset(0.5, 0.5))
-                          .shimmer(delay: 800.ms),
+                          .shimmer(delay: AppMotion.fast),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Copa das Bebidas',
@@ -78,7 +78,7 @@ class HomePage extends ConsumerWidget {
                           fontWeight: FontWeight.w600,
                           letterSpacing: 2,
                         ),
-                      ).animate().fadeIn(delay: 200.ms),
+                      ).animate().fadeIn(delay: AppMotion.fast),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         'Crie grupos, registre\nsuas bebidas e domine\no ranking 🏆',
@@ -89,9 +89,9 @@ class HomePage extends ConsumerWidget {
                           height: 1.2,
                           fontWeight: FontWeight.w800,
                         ),
-                      ).animate().fadeIn(delay: 300.ms).slideY(
+                      ).animate().fadeIn(delay: const Duration(milliseconds: 80)).slideY(
                             begin: 0.2,
-                            duration: 500.ms,
+                            duration: AppMotion.normal,
                             curve: Curves.easeOut,
                           ),
                       const Spacer(flex: 2),
@@ -105,7 +105,7 @@ class HomePage extends ConsumerWidget {
                           _FeaturePill(emoji: '⚡', label: 'Tempo real'),
                           _FeaturePill(emoji: '🏆', label: 'Ranking ao vivo'),
                         ],
-                      ).animate().fadeIn(delay: 500.ms),
+                      ).animate().fadeIn(delay: const Duration(milliseconds: 120)),
                       const SizedBox(height: AppSpacing.xl),
                       // CTA buttons
                       PrimaryButton(
@@ -114,8 +114,10 @@ class HomePage extends ConsumerWidget {
                         onPressed: () => context.push(AppRoutes.create),
                       )
                           .animate()
-                          .fadeIn(delay: 600.ms)
-                          .slideY(begin: 0.3, duration: 500.ms),
+                          .fadeIn(
+                              delay: const Duration(milliseconds: 140),
+                              duration: AppMotion.fast)
+                          .slideY(begin: 0.3, duration: AppMotion.normal),
                       const SizedBox(height: AppSpacing.md),
                       // Definir código do grupo a entrar (Entrar em um grupo)
                       SecondaryButton(
@@ -124,8 +126,10 @@ class HomePage extends ConsumerWidget {
                         onPressed: () => context.push(AppRoutes.enterGroup),
                       )
                           .animate()
-                          .fadeIn(delay: 650.ms)
-                          .slideY(begin: 0.3, duration: 500.ms),
+                          .fadeIn(
+                              delay: const Duration(milliseconds: 170),
+                              duration: AppMotion.fast)
+                          .slideY(begin: 0.3, duration: AppMotion.normal),
                       const SizedBox(height: AppSpacing.md),
                       // Já estou num grupo (código + nome + senha)
                       SecondaryButton(
@@ -134,8 +138,10 @@ class HomePage extends ConsumerWidget {
                         onPressed: () => context.push(AppRoutes.login),
                       )
                           .animate()
-                          .fadeIn(delay: 700.ms)
-                          .slideY(begin: 0.3, duration: 500.ms),
+                          .fadeIn(
+                              delay: const Duration(milliseconds: 200),
+                              duration: AppMotion.fast)
+                          .slideY(begin: 0.3, duration: AppMotion.normal),
                       const Spacer(),
                       if (identity.knownGroups.isNotEmpty)
                         Padding(

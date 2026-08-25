@@ -92,8 +92,8 @@ class _EnterGroupPageState extends ConsumerState<EnterGroupPage> {
                       onPressed: _submit,
                     )
                         .animate()
-                        .fadeIn(delay: 100.ms)
-                        .slideY(begin: 0.2, duration: 300.ms),
+                        .fadeIn(delay: AppMotion.fast)
+                        .slideY(begin: 0.2, duration: AppMotion.entrance),
                   ],
                 ),
               ),

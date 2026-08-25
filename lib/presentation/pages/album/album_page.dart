@@ -23,6 +23,10 @@ class _AlbumPageState extends ConsumerState<AlbumPage> {
   List _photos = [];
   bool _loading = true;
 
+  /// Fotos já exibidas: anima apenas na primeira carga e em fotos novas.
+  final Set<String> _seenIds = {};
+  bool _bootstrapped = false;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -89,10 +93,23 @@ class _AlbumPageState extends ConsumerState<AlbumPage> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final photo = _photos[index];
-                  return _PhotoTile(photo: photo)
-                      .animate()
-                      .fadeIn(delay: (index * 40).ms)
-                      .scale(begin: const Offset(0.9, 0.9), duration: 300.ms);
+                  Widget tile = _PhotoTile(photo: photo);
+                  if (_seenIds.add(photo.id)) {
+                    tile = tile
+                        .animate()
+                        .fadeIn(
+                          delay: !_bootstrapped
+                              ? Duration(
+                                  milliseconds:
+                                      index.clamp(0, 8) * AppMotion.staggerMs)
+                              : Duration.zero,
+                        )
+                        .scale(
+                          begin: const Offset(0.9, 0.9),
+                          duration: AppMotion.entrance,
+                        );
+                  }
+                  return tile;
                 },
                 childCount: _photos.length,
               ),
@@ -102,6 +119,9 @@ class _AlbumPageState extends ConsumerState<AlbumPage> {
       ],
     ),
     );
+
+    // A partir do próximo build, só fotos novas são animadas.
+    _bootstrapped = true;
   }
 
   String _extractCode(BuildContext context) {

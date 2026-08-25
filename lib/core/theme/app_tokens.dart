@@ -87,3 +87,21 @@ class AppGradients {
     colors: [Color(0xFFE6FBF0), Color(0xFFDFF1E6)],
   );
 }
+
+/// Tokens de movimento/animação.
+///
+/// Regra de projeto: nenhuma entrada de página passa de ~300ms do primeiro
+/// paint até o último elemento essencial; CTAs nunca esperam mais que ~150ms.
+class AppMotion {
+  const AppMotion._();
+
+  static const Duration fast = Duration(milliseconds: 150);
+  static const Duration normal = Duration(milliseconds: 250);
+
+  /// Teto para animações de entrada de conteúdo.
+  static const Duration entrance = Duration(milliseconds: 300);
+
+  /// Intervalo entre itens em um stagger (escala, não soma — delays são
+  /// múltiplos deste token, sempre com teto de [entrance] no último item).
+  static const int staggerMs = 40;
+}

@@ -13,17 +13,29 @@ import '../../widgets/app_states.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/responsive_content.dart';
 
-class FeedPage extends ConsumerWidget {
+class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FeedPage> createState() => _FeedPageState();
+}
+
+class _FeedPageState extends ConsumerState<FeedPage> {
+  /// Itens já exibidos: garante que a animação de entrada rode apenas
+  /// na primeira carga (com stagger curto) e em itens realmente novos —
+  /// nunca a cada rebuild de realtime/polling.
+  final Set<String> _seenIds = {};
+  bool _bootstrapped = false;
+
+  @override
+  Widget build(BuildContext context) {
     final code = _extractCode(context);
     final session = ref.watch(groupSessionProvider(code));
 
     final feed = session.feed;
+    final isFirstLoad = !_bootstrapped;
 
-    return ResponsiveContent(
+    final result = ResponsiveContent(
       child: RefreshIndicator(
         onRefresh: () =>
             ref.read(groupSessionProvider(code).notifier).refresh(),
@@ -55,12 +67,24 @@ class FeedPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
-                  (context, index) => RepaintBoundary(
-                    child: _FeedTile(item: feed[index])
-                        .animate()
-                        .fadeIn(delay: (index * 50).ms)
-                        .slideY(begin: 0.08, duration: 350.ms),
-                  ),
+                  (context, index) {
+                    final item = feed[index];
+                    final isNew = _seenIds.add(item.id);
+                    Widget tile = _FeedTile(item: item);
+                    if (isNew) {
+                      tile = tile
+                          .animate()
+                          .fadeIn(
+                            delay: isFirstLoad
+                                ? Duration(
+                                    milliseconds: index.clamp(0, 8) *
+                                        AppMotion.staggerMs)
+                                : Duration.zero,
+                          )
+                          .slideY(begin: 0.08, duration: AppMotion.entrance);
+                    }
+                    return RepaintBoundary(child: tile);
+                  },
                   childCount: feed.length,
                 ),
               ),
@@ -70,6 +94,10 @@ class FeedPage extends ConsumerWidget {
       ),
       ),
     );
+
+    // A partir do próximo build, só itens novos são animados.
+    _bootstrapped = true;
+    return result;
   }
 
   String _extractCode(BuildContext context) {

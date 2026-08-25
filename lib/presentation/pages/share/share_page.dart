@@ -91,7 +91,8 @@ class SharePage extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
+              ).animate().fadeIn(delay: AppMotion.fast).slideY(
+                  begin: 0.1, duration: AppMotion.normal),
               const SizedBox(height: AppSpacing.lg),
               // Código do grupo
               GlassCard(
@@ -123,7 +124,8 @@ class SharePage extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ).animate().fadeIn(delay: 300.ms),
+              ).animate().fadeIn(
+                  delay: const Duration(milliseconds: 80)),
               const SizedBox(height: AppSpacing.sm),
               GlassCard(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -146,7 +148,8 @@ class SharePage extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ).animate().fadeIn(delay: 350.ms),
+              ).animate().fadeIn(
+                  delay: const Duration(milliseconds: 120)),
               const SizedBox(height: AppSpacing.lg),
             ],
           ),

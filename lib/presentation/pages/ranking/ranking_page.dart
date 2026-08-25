@@ -12,17 +12,28 @@ import '../../widgets/glass_card.dart';
 import '../../widgets/medal_badge.dart';
 import '../../widgets/responsive_content.dart';
 
-class RankingPage extends ConsumerWidget {
+class RankingPage extends ConsumerStatefulWidget {
   const RankingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RankingPage> createState() => _RankingPageState();
+}
+
+class _RankingPageState extends ConsumerState<RankingPage> {
+  /// Participantes já exibidos: anima apenas na primeira carga e em
+  /// participantes realmente novos — nunca a cada rebuild de realtime.
+  final Set<String> _seenIds = {};
+  bool _bootstrapped = false;
+
+  @override
+  Widget build(BuildContext context) {
     final code = _extractCode(context);
     final session = ref.watch(groupSessionProvider(code));
     final ranking = session.ranking;
     final maxGoal = session.group?.maxGoal ?? 100;
+    final isFirstLoad = !_bootstrapped;
 
-    return ResponsiveContent(
+    final result = ResponsiveContent(
       child: CustomScrollView(
         slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: kToolbarHeight + 8)),
@@ -66,7 +77,7 @@ class RankingPage extends ConsumerWidget {
                   if (actualIndex >= ranking.length) return null;
                   final p = ranking[actualIndex];
                   final tier = TitleSystem.currentTier(p.totalDrinks, maxGoal);
-                  return Padding(
+                  Widget row = Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: GlassCard(
                       padding: const EdgeInsets.symmetric(
@@ -102,9 +113,20 @@ class RankingPage extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  )
-                      .animate()
-                      .fadeIn(delay: (actualIndex * 30).ms);
+                  );
+                  if (_seenIds.add(p.id)) {
+                    row = row
+                        .animate()
+                        .fadeIn(
+                          delay: isFirstLoad
+                              ? Duration(
+                                  milliseconds:
+                                      actualIndex.clamp(0, 8) *
+                                          AppMotion.staggerMs)
+                              : Duration.zero,
+                        );
+                  }
+                  return row;
                 },
               ),
             ),
@@ -114,6 +136,10 @@ class RankingPage extends ConsumerWidget {
       ],
     ),
     );
+
+    // A partir do próximo build, só participantes novos são animados.
+    _bootstrapped = true;
+    return result;
   }
 
   String _extractCode(BuildContext context) {
