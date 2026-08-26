@@ -78,7 +78,7 @@ class StatsPage extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: AppSpacing.sm,
               crossAxisSpacing: AppSpacing.sm,
-              mainAxisExtent: 122,
+              mainAxisExtent: 130,
             ),
             delegate: SliverChildListDelegate([
               _MetricCard('🍺', 'Total', '$total', const Color(0xFF1FB45C)),
@@ -174,12 +174,12 @@ class _MetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(emoji, style: const TextStyle(fontSize: 18)),
+            child: Text(emoji, style: const TextStyle(fontSize: 16)),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(value,

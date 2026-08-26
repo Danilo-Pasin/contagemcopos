@@ -148,3 +148,9 @@ ao projeto do app. Fluxo correto para DDL:
 `supabase db query --linked -f supabase/migrations/<arquivo>.sql` (CLI linkado,
 login no terminal do usuário). Aplicado em 25/08 após o app retornar
 PGRST202 para `ctg_ensure_account`.
+
+## ✅ Overflow residual (4px) nos cards de métrica — correção definitiva
+- O extent 122 ainda deixava o conteúdo (~92px) 4px maior que os 88px internos
+  em telas mais largas (cards de 225px).
+- `stats_page.dart`: `mainAxisExtent` 122 → 130; emoji compactado
+  (fontSize 16, padding 5). Conteúdo ≈88px vs. ~96px disponíveis.
