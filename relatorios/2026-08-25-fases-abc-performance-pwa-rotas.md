@@ -140,3 +140,11 @@ qualquer grupo. Agora a unicidade vale **apenas dentro de cada grupo**.
   permitida entre grupos · reaproveitamento de credenciais · login por grupo —
   todos OK, sem vazamento de dados de teste.
 - `flutter test` → ✅ 147/147 · `flutter build web --release` → ✅.
+
+### ⚠️ Nota operacional — MCP Supabase aponta para o projeto ANTIGO
+O MCP está conectado a `cxuurozyyfcqxytwaoaa` (compartilhado), não ao dedicado
+`qzfqkldzvoqvxytvaoaa` que o app usa. Migrações aplicadas via MCP NÃO chegam
+ao projeto do app. Fluxo correto para DDL:
+`supabase db query --linked -f supabase/migrations/<arquivo>.sql` (CLI linkado,
+login no terminal do usuário). Aplicado em 25/08 após o app retornar
+PGRST202 para `ctg_ensure_account`.
