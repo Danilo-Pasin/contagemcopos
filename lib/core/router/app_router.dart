@@ -20,11 +20,18 @@ import 'app_routes.dart';
 ///
 /// - `/g` (sem código) → home.
 /// - `/g/CODE` exato (link compartilhável/deep link) → `/g/CODE/inicio`.
+/// - `/g/CODE/share|hall-of-fame` → caminhos novos sob a branch Início.
 String? appRedirect(Uri uri) {
   final path = uri.path;
   if (path == AppRoutes.groupBase) return AppRoutes.home;
   if (RegExp(r'^/g/[A-Za-z0-9]+$').hasMatch(path)) {
     return '$path/${AppRoutes.homeSegment}';
+  }
+  // Compatibilidade com deep links do formato antigo.
+  final legacy = RegExp(r'^/g/([A-Za-z0-9]+)/(share|hall-of-fame)$')
+      .firstMatch(path);
+  if (legacy != null) {
+    return '${AppRoutes.groupBase}/${legacy.group(1)}/${AppRoutes.homeSegment}/${legacy.group(2)}';
   }
   return null;
 }

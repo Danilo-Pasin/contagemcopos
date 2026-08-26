@@ -154,3 +154,17 @@ PGRST202 para `ctg_ensure_account`.
   em telas mais largas (cards de 225px).
 - `stats_page.dart`: `mainAxisExtent` 122 → 130; emoji compactado
   (fontSize 16, padding 5). Conteúdo ≈88px vs. ~96px disponíveis.
+
+---
+
+# CHANGELOG 2026-08-25 — /share e /hall-of-fame quebrados (rota antiga) `[Front-end]`
+
+## ✅ Navegar para Compartilhar/Hall da Fama dava "página não encontrada"
+- **Causa:** a reestruturação das rotas moveu share/hall-of-fame para sob a
+  branch Início (`/g/CODE/inicio/*`), mas os helpers `groupShare`/
+  `groupHallOfFame` continuavam produzindo `/g/CODE/share|hall-of-fame` —
+  rota inexistente → errorBuilder.
+- **Fix:** helpers atualizados para o caminho novo + `appRedirect` com
+  compatibilidade de deep links antigos (`/g/CODE/share` →
+  `/g/CODE/inicio/share`, idem hall-of-fame).
+- Testes atualizados (+1 líquido): 148 ✅ · build web ✅.

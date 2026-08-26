@@ -42,6 +42,9 @@ class AppRoutes {
   static String groupRanking(String code) => '/g/$code/ranking';
   static String groupStats(String code) => '/g/$code/stats';
   static String groupAlbum(String code) => '/g/$code/album';
-  static String groupShare(String code) => '/g/$code/share';
-  static String groupHallOfFame(String code) => '/g/$code/hall-of-fame';
+  // share/hall-of-fame são subrotas da branch Início (/g/:code/inicio/*).
+  static String groupShare(String code) =>
+      '/g/$code/$homeSegment/$shareSegment';
+  static String groupHallOfFame(String code) =>
+      '/g/$code/$homeSegment/$hallOfFameSegment';
 }

@@ -30,8 +30,8 @@ void main() {
       expect(AppRoutes.groupRanking(code), '/g/AB72XC/ranking');
       expect(AppRoutes.groupStats(code), '/g/AB72XC/stats');
       expect(AppRoutes.groupAlbum(code), '/g/AB72XC/album');
-      expect(AppRoutes.groupShare(code), '/g/AB72XC/share');
-      expect(AppRoutes.groupHallOfFame(code), '/g/AB72XC/hall-of-fame');
+      expect(AppRoutes.groupShare(code), '/g/AB72XC/inicio/share');
+      expect(AppRoutes.groupHallOfFame(code), '/g/AB72XC/inicio/hall-of-fame');
     });
   });
 
@@ -127,12 +127,9 @@ void main() {
     });
 
     test('share e hall-of-fame são subrotas da branch Início', () {
-      expect(
-          '${AppRoutes.groupBase}/:code/${AppRoutes.shareSegment}',
-          '/g/:code/share');
-      expect(
-          '${AppRoutes.groupBase}/:code/${AppRoutes.hallOfFameSegment}',
-          '/g/:code/hall-of-fame');
+      expect(AppRoutes.groupShare(':code'), '/g/:code/inicio/share');
+      expect(AppRoutes.groupHallOfFame(':code'),
+          '/g/:code/inicio/hall-of-fame');
     });
 
     test('REGRESSÃO: GoRouter instancia sem "branch cannot be parameterized"',
@@ -153,10 +150,18 @@ void main() {
       test('/g/CODE → /g/CODE/inicio (link compartilhável)', () {
         expect(appRedirect(Uri.parse('/g/AB72XC')), '/g/AB72XC/inicio');
       });
+      test('paths legados de share/hall-of-fame são redirecionados', () {
+        expect(appRedirect(Uri.parse('/g/AB72XC/share')),
+            '/g/AB72XC/inicio/share');
+        expect(appRedirect(Uri.parse('/g/AB72XC/hall-of-fame')),
+            '/g/AB72XC/inicio/hall-of-fame');
+      });
       test('abas internas NÃO são redirecionadas', () {
         expect(appRedirect(Uri.parse('/g/AB72XC/feed')), isNull);
         expect(appRedirect(Uri.parse('/g/AB72XC/stats')), isNull);
-        expect(appRedirect(Uri.parse('/g/AB72XC/share')), isNull);
+        expect(appRedirect(Uri.parse('/g/AB72XC/inicio/share')), isNull);
+        expect(appRedirect(Uri.parse('/g/AB72XC/inicio/hall-of-fame')),
+            isNull);
       });
       test('outras rotas não são afetadas', () {
         expect(appRedirect(Uri.parse('/')), isNull);
