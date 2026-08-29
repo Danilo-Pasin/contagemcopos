@@ -26,7 +26,8 @@ class GroupHomePage extends ConsumerStatefulWidget {
   ConsumerState<GroupHomePage> createState() => _GroupHomePageState();
 }
 
-class _GroupHomePageState extends ConsumerState<GroupHomePage> {
+class _GroupHomePageState extends ConsumerState<GroupHomePage>
+    with WidgetsBindingObserver {
   late ConfettiController _confetti;
   String? _previousLeaderId;
   bool _mounted = false;
@@ -37,15 +38,35 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     super.initState();
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _mounted = true;
+    WidgetsBinding.instance.addObserver(this);
+    _startTicker();
+  }
+
+  void _startTicker() {
     // Redesenha periodicamente para manter a contagem regressiva em segundos
     // (1s antes do início da festa; barato) e o countdown geral atualizado.
+    _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_mounted) setState(() {});
+      if (_mounted && _ticking) setState(() {});
     });
+  }
+
+  // Pausa o rebuild quando o app/aba não está visível (iOS/skwasm
+  // single-thread): evita gasto de CPU desnecessário e reduz o
+  // "travamento" percebido ao voltar. On web, ocultar a aba dispara
+  // lifecycle hidden/paused.
+  bool _ticking = true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final visible =
+        state == AppLifecycleState.resumed || state == AppLifecycleState.inactive;
+    _ticking = visible;
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _mounted = false;
     _ticker?.cancel();
     _confetti.dispose();

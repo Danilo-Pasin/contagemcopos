@@ -20,7 +20,7 @@ class GlassCard extends StatelessWidget {
     this.margin,
     this.radius,
     this.onTap,
-    this.blur = 14,
+    this.blur = 8,
     this.color,
   });
 
