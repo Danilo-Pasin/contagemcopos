@@ -31,17 +31,11 @@ class TitleSystem {
   const TitleSystem._();
 
   static const List<TitleTier> tiers = [
-    TitleTier(id: 'aprendiz', emoji: '🍺', name: 'Aprendiz', required: 5),
-    TitleTier(id: 'cachaceiro', emoji: '🍻', name: 'Cachaceiro', required: 10),
-    TitleTier(id: 'rei_boteco', emoji: '👑', name: 'Rei do Boteco', required: 15),
-    TitleTier(id: 'lenda', emoji: '💀', name: 'Lenda', required: 20),
-    TitleTier(id: 'imperador', emoji: '🏆', name: 'Imperador do Copo', required: 30),
-    TitleTier(id: 'mito', emoji: '🔥', name: 'Mito do Bar', required: 40),
-    TitleTier(id: 'deus', emoji: '👑👑', name: 'Deus da Geladeira', required: 50),
-    TitleTier(id: 'aura', emoji: '✨', name: 'Farmador de aura', required: 67),
-    TitleTier(id: 'alcoolatra', emoji: '🍾', name: 'Alcoólatra Supremo', required: 76),
-    TitleTier(id: 'sigma', emoji: '🐺', name: 'O Sigma Verdadeiro', required: 88),
-    TitleTier(id: 'reabilitacao', emoji: '🙏', name: 'Papo de Reabilitação', required: 99),
+    TitleTier(id: 'aprendiz', emoji: '🍺', name: 'Aprendiz', required: 1),
+    TitleTier(id: 'cachaceiro', emoji: '🍻', name: 'Cachaceiro', required: 3),
+    TitleTier(id: 'alcoolatra', emoji: '🤌', name: 'Alcoólatra', required: 6),
+    TitleTier(id: 'lenda', emoji: '💀', name: 'Lenda', required: 9),
+    TitleTier(id: 'reabilitacao', emoji: '🙏', name: 'Papo de Reabilitação', required: 12),
   ];
 
   /// Patamares efetivos (monotônicos) para uma meta.

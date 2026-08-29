@@ -142,7 +142,7 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
                 controller: _groupNameCtrl,
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
-                  hintText: 'Ex: Churrasco do Danilo',
+                  hintText: 'Ex: Alcoólatras OGS',
                   prefixIcon: Icon(Icons.groups_rounded),
                 ),
                 onChanged: (_) => setState(() {}),
