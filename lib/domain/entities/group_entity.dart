@@ -55,6 +55,14 @@ class GroupEntity {
   bool acceptsEntries({DateTime? now}) =>
       isActive && (now ?? DateTime.now()).isBefore(endDate);
 
+  /// Permite registrar bebidas/fotos: precisa estar `active` e dentro da janela
+  /// da festa (entre [startDate] e [endDate]). Diferente de [acceptsEntries],
+  /// que também controla a entrada de novos membros (liberada antes do início).
+  bool canLogDrinks({DateTime? now}) {
+    final n = now ?? DateTime.now();
+    return isActive && !n.isBefore(startDate) && n.isBefore(endDate);
+  }
+
   /// Link público de entrada no grupo.
   String get shareLink => '/g/$code';
 

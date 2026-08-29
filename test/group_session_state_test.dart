@@ -92,6 +92,60 @@ void main() {
     });
   });
 
+  group('GroupEntity.canLogDrinks', () {
+    final now = DateTime(2026, 8, 10, 12);
+
+    // festa que começa 01/08 e termina 31/08
+    GroupEntity partyGroup({
+      DateTime? start,
+      DateTime? end,
+      GroupStatus status = GroupStatus.active,
+    }) =>
+        GroupEntity(
+          id: 'g1',
+          code: 'ABCDEF',
+          name: 'Boteco',
+          creatorAnonId: 'anon1',
+          startDate: start ?? DateTime(2026, 8, 1),
+          endDate: end ?? DateTime(2026, 8, 31),
+          durationDays: 30,
+          maxGoal: 100,
+          status: status,
+          coverEmoji: '🍻',
+          createdAt: DateTime(2026, 8, 1),
+        );
+
+    test('dentro da janela da festa (entre início e fim) pode registrar', () {
+      expect(partyGroup().canLogDrinks(now: now), isTrue);
+    });
+
+    test('antes do início NÃO pode registrar', () {
+      expect(partyGroup(start: DateTime(2026, 8, 15))
+          .canLogDrinks(now: now), isFalse);
+    });
+
+    test('exatamente no início pode registrar (não é antes)', () {
+      expect(partyGroup(start: now).canLogDrinks(now: now), isTrue);
+    });
+
+    test('após o fim NÃO pode registrar', () {
+      expect(partyGroup(end: now.subtract(const Duration(hours: 1)))
+          .canLogDrinks(now: now), isFalse);
+    });
+
+    test('encerrado nunca permite registrar', () {
+      expect(partyGroup(status: GroupStatus.ended).canLogDrinks(now: now),
+          isFalse);
+    });
+
+    test('canLogDrinks independe de acceptsEntries (entrada liberada)', () {
+      // Mesmo fluxo pré-festa: entrada aceita (só exige fim), registro não.
+      final g = partyGroup(start: DateTime(2026, 8, 15));
+      expect(g.acceptsEntries(now: now), isTrue);
+      expect(g.canLogDrinks(now: now), isFalse);
+    });
+  });
+
   group('ParticipantEntity', () {
     test('isCreator reflete o role', () {
       expect(_p('a', 0, role: MemberRole.creator).isCreator, isTrue);

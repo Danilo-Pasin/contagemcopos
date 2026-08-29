@@ -37,8 +37,9 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     super.initState();
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _mounted = true;
-    // A cada 30s recalcula o countdown; só redesenha se o rótulo mudou.
-    _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Redesenha periodicamente para manter a contagem regressiva em segundos
+    // (1s antes do início da festa; barato) e o countdown geral atualizado.
+    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (_mounted) setState(() {});
     });
   }
@@ -211,9 +212,9 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     final tier = TitleSystem.currentTier(me.totalDrinks, maxGoal);
     final nextTier = TitleSystem.nextTier(me.totalDrinks, maxGoal);
     final progress = TitleSystem.progressToNext(me.totalDrinks, maxGoal);
-    // Desafio encerrado quando o status é 'ended' OU o prazo já passou:
-    // a partir daí só leitura (sem +1 bebida / foto).
-    final running = session.group!.acceptsEntries();
+    // Permite registrar bebida/foto apenas dentro da janela da festa (das 22h
+    // ao fim): antes do início ou depois do fim, só leitura (+1/foto inativos).
+    final running = session.group!.canLogDrinks();
 
     return Stack(
       children: [
@@ -343,6 +344,20 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
                             ),
                           ),
                         const SizedBox(height: AppSpacing.lg),
+                        // Aviso de contagem regressiva antes do início da festa
+                        if (!running && DateTime.now().isBefore(session.group!.startDate))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                            child: Text(
+                              '🎉 A festa começa em '
+                              '${DateTimeX.timeUntilStart(session.group!.startDate)}',
+                              textAlign: TextAlign.center,
+                              style: context.tt.bodySmall?.copyWith(
+                                color: context.cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                         // Botão +1 BEBIDA gigante
                         SizedBox(
                           width: double.infinity,

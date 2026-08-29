@@ -70,6 +70,20 @@ void main() {
       expect(e.acceptsEntries(), isFalse, reason: 'desconhecido não aceita');
     });
 
+    test('canLogDrinks respeita a janela da festa (início e fim)', () {
+      final e = GroupModel(_groupJson()).toEntity(); // 01/08 a 31/08
+      expect(e.startDate, DateTime(2026, 8, 1));
+      // dentro da janela
+      expect(e.canLogDrinks(now: DateTime(2026, 8, 10)), isTrue);
+      // antes do início
+      expect(e.canLogDrinks(now: DateTime(2026, 7, 31)), isFalse);
+      // após o fim
+      expect(e.canLogDrinks(now: DateTime(2026, 9, 1)), isFalse);
+      // entrada continua liberada antes do início (independência)
+      expect(e.acceptsEntries(now: DateTime(2026, 7, 31)), isTrue);
+      expect(e.canLogDrinks(now: DateTime(2026, 7, 31)), isFalse);
+    });
+
     test('cover_emoji ausente usa padrão 🍻', () {
       final e = GroupModel(_groupJson(coverEmoji: null)).toEntity();
       expect(e.coverEmoji, '🍻');

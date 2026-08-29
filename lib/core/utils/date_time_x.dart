@@ -62,4 +62,17 @@ class DateTimeX {
     if (diff.inMinutes >= 1) return (value: diff.inMinutes, label: 'min restantes');
     return (value: diff.inSeconds, label: 'seg restantes');
   }
+
+  /// Tempo restante até o início da festa, em `d HH:MM:SS` (ou `HH:MM:SS`).
+  /// Retorna "00:00:00" quando a data já chegou/passou.
+  static String timeUntilStart(DateTime start, {DateTime? now}) {
+    final diff = start.toLocal().difference((now ?? DateTime.now()).toLocal());
+    if (diff.inSeconds <= 0) return '00:00:00';
+    final days = diff.inDays;
+    final h = (diff.inHours % 24).toString().padLeft(2, '0');
+    final m = (diff.inMinutes % 60).toString().padLeft(2, '0');
+    final s = (diff.inSeconds % 60).toString().padLeft(2, '0');
+    final hms = '$h:$m:$s';
+    return days > 0 ? '$days $hms' : hms;
+  }
 }
