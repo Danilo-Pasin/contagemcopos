@@ -66,10 +66,49 @@
   </div>
 
   <script>
+    // iOS PWA standalone: trabalha em torno do "teclado fantasma" que deixa a
+    // parte de baixo da tela sem resposta (flutter/flutter#111896/#115829).
+    // Listeners passivos + reset de scroll recolhem o offset de viewport que o
+    // iOS ergue após focar um TextField, restaurando o toque na NavigationBar.
+    (function () {
+      var isIosStandalone =
+        window.navigator.standalone === true ||
+        (window.navigator.userAgent.indexOf('iPhone') !== -1 ||
+          window.navigator.userAgent.indexOf('iPad') !== -1);
+      if (!isIosStandalone) return;
+      document.addEventListener('touchstart', function () {}, {
+        passive: true,
+      });
+      function resetScroll() {
+        if (window.scrollY > 0) window.scrollTo(0, 0);
+        if (window.visualViewport) {
+          var v = window.visualViewport;
+          if (v.offsetTop > 0 || v.offsetLeft > 0) v.scrollTo(0, 0);
+        }
+      }
+      ['focusout', 'resize', 'pageshow', 'visibilitychange'].forEach(function (ev) {
+        window.addEventListener(ev, resetScroll, { passive: true });
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', resetScroll, {
+          passive: true,
+        });
+      }
+    })();
+
     window.addEventListener('flutter-first-frame', function () {
       var s = document.getElementById('splash');
+      window.scrollTo(0, 0);
       if (s) { s.classList.add('gone'); setTimeout(function(){ s.remove(); }, 500); }
     });
+
+    // Timeout de segurança: se o primeiro frame nunca disparar (ex.: init do
+    // wasm lento no iOS), remove o overlay de z-9999 que bloquearia todos os
+    // toques para sempre.
+    setTimeout(function () {
+      var s = document.getElementById('splash');
+      if (s) { s.classList.add('gone'); setTimeout(function(){ s.remove(); }, 300); }
+    }, 12000);
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

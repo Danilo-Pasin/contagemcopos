@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +8,7 @@ import '../../../core/utils/date_time_x.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/group_session_provider.dart';
 import '../../widgets/app_avatar.dart';
+import '../../widgets/app_network_image.dart';
 import '../../widgets/app_states.dart';
 import '../../widgets/responsive_content.dart';
 
@@ -144,7 +144,7 @@ class _PhotoTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
+            AppNetworkImage(
               imageUrl: photo.url,
               fit: BoxFit.cover,
               memCacheWidth: 400,
@@ -223,7 +223,7 @@ class _PhotoViewer extends StatelessWidget {
             children: [
               Center(
                 child: InteractiveViewer(
-                  child: CachedNetworkImage(imageUrl: url),
+                  child: AppNetworkImage(imageUrl: url),
                 ),
               ),
               Positioned(

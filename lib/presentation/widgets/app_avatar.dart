@@ -1,6 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_tokens.dart';
+import 'app_network_image.dart';
 
 /// Avatar com fallback de inicial, coroa de líder, escudo de criador e borda.
 class AppAvatar extends StatelessWidget {
@@ -35,7 +35,7 @@ class AppAvatar extends StatelessWidget {
         width: size,
         height: size,
         child: photoUrl != null && photoUrl!.isNotEmpty
-            ? CachedNetworkImage(
+            ? AppNetworkImage(
                 imageUrl: photoUrl!,
                 fit: BoxFit.cover,
                 memCacheWidth: 256,
