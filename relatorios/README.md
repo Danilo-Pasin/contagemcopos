@@ -23,5 +23,7 @@ arquivo, cada entrada indica o escopo dominante da mudança:
 | 2026-08-10 | [2026-08-10-login-titulos-performance-migracao-supabase.md](2026-08-10-login-titulos-performance-migracao-supabase.md) | Re-vínculo de sessão no login · títulos fixos · foto de perfil · performance P1–P4 · migração para projeto Supabase dedicado · PWA iOS |
 | 2026-08-25 | [2026-08-25-fases-abc-performance-pwa-rotas.md](2026-08-25-fases-abc-performance-pwa-rotas.md) | Fases A/B/C (navegação, cache de stats, animações) · prompt de instalação PWA · correções das rotas do grupo (go_router) |
 | 2026-08-29 | [2026-08-29-app-ogs-festa-ranking-grupos.md](2026-08-29-app-ogs-festa-ranking-grupos.md) | App OGS da festa · ranking de grupos (mobile/desktop) · correção do layout responsivo do ranking · novos testes (agregação de grupos, janela fixa) · suíte 160 ✅ |
+| 2026-08-29 | [2026-08-29-pwa-ios-travamento-fotos-pretas.md](2026-08-29-pwa-ios-travamento-fotos-pretas.md) | Fix PWA: travamento iOS standalone (touch/teclado fantasma) · fotos pretas web (HttpGet + Flutter 3.44.9 fixado) · timer de 1s pausa em aba oculta · blur dos cards · suíte 168 ✅ |
+| 2026-08-29 | [2026-08-29-foto-perfil-relink-anon.md](2026-08-29-foto-perfil-relink-anon.md) | Bug da foto de perfil não atualizar · re-vínculo de `anon_id` no `ctg_ensure_account` (backfill morto) · front defensivo contra falso sucesso · suíte 168 ✅ |
 
 Documentação viva (não-histórica) permanece em `docs/` e `AGENTS.md`.
