@@ -7,6 +7,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../providers/core_providers.dart';
+import '../../providers/group_session_provider.dart';
 import '../../providers/identity_provider.dart';
 import '../../widgets/app_avatar.dart';
 import '../../widgets/app_buttons.dart';
@@ -73,6 +74,9 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
           await ref
               .read(identityProvider.notifier)
               .rememberMember(widget.code, me.id);
+          // Garante que a sessão do grupo seja recriada com o membro resolvido
+          // (evita o loop de redirecionamento quando a sessão ficou com me=null).
+          ref.invalidate(groupSessionProvider(widget.code));
           if (mounted) {
             context.go(AppRoutes.group(widget.code));
             return;
@@ -87,6 +91,7 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
           await ref
               .read(identityProvider.notifier)
               .rememberMember(widget.code, me.id);
+          ref.invalidate(groupSessionProvider(widget.code));
           if (mounted) {
             context.go(AppRoutes.group(widget.code));
             return;
@@ -184,6 +189,10 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
         accountId: accountId,
       );
       await identityNotifier.rememberMember(widget.code, me.id);
+
+      // Recria a sessão do grupo para resolver o membro (evita loop de
+      // redirecionamento causado pela sessão antiga com me=null).
+      ref.invalidate(groupSessionProvider(widget.code));
 
       if (mounted) context.go(AppRoutes.group(widget.code));
     } catch (e) {
@@ -300,6 +309,16 @@ class _JoinGroupPageState extends ConsumerState<JoinGroupPage> {
                           'para recuperar seu perfil.',
                           style: context.tt.bodySmall?.copyWith(
                               color: context.cs.onSurfaceVariant),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Center(
+                          child: TextButton.icon(
+                            onPressed: () => context.go(
+                              AppRoutes.loginWithCode(widget.code),
+                            ),
+                            icon: const Icon(Icons.login_rounded),
+                            label: const Text('Já tenho conta neste grupo'),
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         PrimaryButton(

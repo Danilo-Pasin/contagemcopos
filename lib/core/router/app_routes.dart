@@ -21,6 +21,9 @@ class AppRoutes {
   static const String login = '/entrar-login';
   static const String loginName = 'login';
 
+  /// Login com código de grupo já preenchido (vindo do link de convidado).
+  static String loginWithCode(String code) => '/entrar-login?code=$code';
+
   /// Rota fixa usada apenas no redirect de "/g" (sem código) para a home.
   static const String groupBase = '/g';
   static const String groupBaseName = 'groupBase';

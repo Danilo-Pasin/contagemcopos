@@ -65,7 +65,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.login,
         name: AppRoutes.loginName,
-        builder: (_, state) => const LoginGroupPage(),
+        builder: (_, state) => LoginGroupPage(
+          initialCode: state.uri.queryParameters['code'] ?? '',
+        ),
       ),
       // Grupo com bottom navigation persistente (estado vivo entre abas).
       // A ordem dos branches deve casar com os destinos da NavigationBar

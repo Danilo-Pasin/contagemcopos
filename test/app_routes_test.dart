@@ -51,6 +51,10 @@ void main() {
       }
     });
 
+    test('loginWithCode preenche o código via query param', () {
+      expect(AppRoutes.loginWithCode('AB72XC'), '/entrar-login?code=AB72XC');
+    });
+
     test('nomes de rota são únicos entre si', () {
       final names = {
         AppRoutes.homeName,
