@@ -14,10 +14,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OGS">
   <meta name="theme-color" content="#1FB45C">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <!-- Ícone da home screen do iOS (180x180). URL nova força o iOS a re-buscar
+       (o iOS cacheia o ícone por URL e não atualiza na mesma rota). -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+  <!-- .ico na raiz: o Safari (macOS) busca /favicon.ico em vez do <link> PNG. -->
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <!-- PNG versionado (?v=2): obriga os demais navegadores a ignorar o cache. -->
+  <link rel="icon" type="image/png" href="favicon.png?v=2"/>
   <link rel="manifest" href="manifest.json">
 
   <title>OGS</title>

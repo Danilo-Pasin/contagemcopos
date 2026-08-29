@@ -43,6 +43,14 @@ def fit(img: Image.Image, size: int, fill: float) -> Image.Image:
     return canvas
 
 
+def compose_on_bg(img: Image.Image, size: int, fill: float,
+                  bg: tuple = (11, 14, 20, 255)) -> Image.Image:
+    """Logo sem fundo composto sobre o fundo do app (favicon/ícone iOS)."""
+    bg_canvas = Image.new('RGBA', (size, size), bg)
+    bg_canvas.paste(fit(img, size, fill), (0, 0), fit(img, size, fill))
+    return bg_canvas.convert('RGB')
+
+
 def main() -> None:
     trimmed = remove_bg(Image.open(SRC))
 
@@ -61,10 +69,19 @@ def main() -> None:
     icon_192.save(f'{OUT_DIR}Icon-192.png')
     icon_512.save(f'{OUT_DIR}Icon-512.png')
 
-    # Favicon: composita o logo sem fundo sobre o fundo do app (nao preto).
-    fav = Image.new('RGBA', trimmed.size, (11, 14, 20, 255))
-    fav.paste(trimmed, (0, 0), trimmed)
-    fav.convert('RGB').save('web/favicon.png')
+    # Favicon: logo sobre o fundo do app em canvas QUADRADO (favicons/.ico
+    # exigem quadrado; o navegador redimensiona).
+    fav = compose_on_bg(trimmed, 196, 0.82)
+    fav.save('web/favicon.png')
+    # Se preferencia: também salva um .ico multi-tamanho (Safari macOS busca
+    # /favicon.ico na raiz — os navegadores modernos aceitam tanto).
+    fav.save('web/favicon.ico', format='ICO',
+             sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
+
+    # apple-touch-icon: ícone da home screen do iOS (180x180, sem
+    # transparência — o iOS ignora alpha e aplica cantos arredondados).
+    apple = compose_on_bg(trimmed, 180, 0.82)
+    apple.save(f'{OUT_DIR}apple-touch-icon.png')
 
     # Preview para o usuário validar a remoção do fundo sobre fundo escuro/claro.
     preview = Image.new('RGBA', (1288, 634), (11, 14, 20, 255))
@@ -78,7 +95,8 @@ def main() -> None:
     opaque = sum(1 for p in trimmed.getdata() if p[3] > 0)
     print(f'assets/logo.png {trimmed.size} {trimmed.mode}')
     print(f'% opaco apos remocao: {100*opaque/total:.1f}%')
-    print('icons e favicon gerados; preview em docs/logo-preview.png')
+    print('icons, favicon(.png/.ico) e apple-touch-icon gerados; '
+          'preview em docs/logo-preview.png')
 
 
 if __name__ == '__main__':
