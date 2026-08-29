@@ -178,19 +178,42 @@ class _TutorialSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconStep1 = iosSafari ? Icons.ios_share_rounded : Icons.more_vert_rounded;
-    final labelStep1 = iosSafari
-        ? 'Toque no botão Compartilhar'
-        : 'Toque no menu (⋮) do navegador';
-    final labelStep2 = iosSafari
-        ? 'Role e toque em "Adicionar à Tela de Início"'
-        : 'Toque em "Adicionar à tela inicial"';
-
+    if (iosSafari) {
+      return Column(
+        children: [
+          _StepWidget(
+            step: 1,
+            icon: Icons.ios_share_rounded,
+            text: 'Toque no botão Compartilhar',
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _StepWidget(
+            step: 2,
+            icon: Icons.add_to_home_screen_rounded,
+            text: 'Role e toque em "Adicionar à Tela de Início"',
+          ),
+        ],
+      );
+    }
     return Column(
       children: [
-        _StepWidget(step: 1, icon: iconStep1, text: labelStep1),
+        _StepWidget(
+          step: 1,
+          icon: Icons.more_vert_rounded,
+          text: 'Toque no menu (⋮) do navegador',
+        ),
         const SizedBox(height: AppSpacing.md),
-        _StepWidget(step: 2, icon: Icons.add_to_home_screen_rounded, text: labelStep2),
+        _StepWidget(
+          step: 2,
+          icon: Icons.share_rounded,
+          text: 'Toque em "Compartilhar"',
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _StepWidget(
+          step: 3,
+          icon: Icons.add_to_home_screen_rounded,
+          text: 'Toque em "Adicionar à tela inicial"',
+        ),
       ],
     );
   }

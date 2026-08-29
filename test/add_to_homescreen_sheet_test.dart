@@ -20,10 +20,12 @@ void main() {
       expect(find.text('Entendi'), findsOneWidget);
     });
 
-    testWidgets('Android/Chrome mostra passos do menu (⋮)', (tester) async {
+    testWidgets('Android/Chrome mostra passos do menu (⋮) e Compartilhar',
+        (tester) async {
       await tester.pumpWidget(_host(const AddToHomescreenSheet()));
 
       expect(find.text('Toque no menu (⋮) do navegador'), findsOneWidget);
+      expect(find.text('Toque em "Compartilhar"'), findsOneWidget);
       expect(find.text('Toque em "Adicionar à tela inicial"'), findsOneWidget);
       expect(find.text('Entendi'), findsOneWidget);
     });
