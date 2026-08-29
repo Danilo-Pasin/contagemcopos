@@ -153,7 +153,10 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
     final source = await showModalBottomSheet<_PhotoSource>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _PhotoSourceSheet(),
+      builder: (_) => const _PhotoSourceSheet(
+        title: '📸 Foto de perfil',
+        description: 'Escolha uma foto para o seu perfil.',
+      ),
     );
     if (!mounted || source == null) return;
 
@@ -550,7 +553,13 @@ enum _PhotoSource { camera, gallery }
 
 /// Popup de origem da foto obrigatória da bebida.
 class _PhotoSourceSheet extends StatelessWidget {
-  const _PhotoSourceSheet();
+  final String title;
+  final String description;
+
+  const _PhotoSourceSheet({
+    this.title = '📸 Foto da bebida',
+    this.description = 'Obrigatória para registrar a bebida.',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -567,7 +576,7 @@ class _PhotoSourceSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text('📸 Foto da bebida',
+                  Text(title,
                       style: context.tt.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w800)),
                   const Spacer(),
@@ -579,7 +588,7 @@ class _PhotoSourceSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Obrigatória para registrar a bebida.',
+                description,
                 style: context.tt.bodySmall
                     ?.copyWith(color: context.cs.onSurfaceVariant),
               ),
