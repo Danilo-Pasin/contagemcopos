@@ -5,7 +5,7 @@ void main() {
   group('AppBrand (OGS)', () {
     test('nome e lema da festa', () {
       expect(AppBrand.name, 'OGS');
-      expect(AppBrand.tagline, 'Copa da Ressaca');
+      expect(AppBrand.tagline, 'Copa dos OGS');
     });
   });
 

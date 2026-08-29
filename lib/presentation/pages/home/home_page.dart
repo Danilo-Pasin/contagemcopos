@@ -71,25 +71,49 @@ class HomePage extends ConsumerWidget {
                         ],
                       ),
                       const Spacer(flex: 2),
-                      // Logo
-                      const AppLogo()
+                      // Logo — bloco preto para destacar a marca verde
+                      const AppLogo(background: Colors.black)
                           .animate()
                           .scale(
                               duration: Duration(milliseconds: 400),
                               curve: Curves.elasticOut,
                               begin: const Offset(0.5, 0.5))
                           .shimmer(delay: AppMotion.fast),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.md),
+                      // OGS — grande, destacado e perto da logo
                       Text(
-                        AppBrand.tagline,
+                        AppBrand.name,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: fg.withValues(alpha: 0.7),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          color: fg,
+                          fontSize: 64,
+                          height: 1.05,
+                          fontWeight: FontWeight.w900,
                           letterSpacing: 2,
                         ),
-                      ).animate().fadeIn(delay: AppMotion.fast),
+                      ).animate().fadeIn(
+                            delay: AppMotion.fast,
+                            duration: AppMotion.normal,
+                          ).slideY(
+                            begin: 0.15,
+                            duration: AppMotion.normal,
+                            curve: Curves.easeOut,
+                          ),
                       const SizedBox(height: AppSpacing.sm),
+                      // Copa dos OGS
+                      Text(
+                        AppBrand.tagline,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: fg.withValues(alpha: 0.85),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 3,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: const Duration(milliseconds: 120)),
+                      const SizedBox(height: AppSpacing.lg),
                       Text(
                         'Crie grupos, registre\nsuas bebidas e domine\no ranking 🏆',
                         textAlign: TextAlign.center,

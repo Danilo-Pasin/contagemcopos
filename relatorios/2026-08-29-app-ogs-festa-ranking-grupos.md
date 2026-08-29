@@ -58,3 +58,17 @@ lado" do ranking **nunca** era ativado.
 - `flutter build web --release` ✅ (compila; valida erros de LSP/caminho).
 
 ---
+
+# Ajustes de UI (após feedback) `[Front-end]`
+
+- **Home:** bloco da logo de verde → **preto** (destaca a marca verde). Para
+  isso, `AppLogo` ganhou o parâmetro `background` (default = verde da marca,
+  usado no prompt de instalação; a home passa `Colors.black`) e o brilho/tonal
+  derivam dele.
+- **Home:** título **OGS** maior (64px, w900) e mais próximo da logo; o lema
+  abaixo passou a **"Copa dos OGS"** (`AppBrand.tagline`).
+- **Ranking:** títulos "Ranking" e "Ranking de grupos" centralizados
+  (`_SectionHeader` com `textAlign: center`).
+- `test/app_config_test.dart` atualizado para o novo lema.
+
+---

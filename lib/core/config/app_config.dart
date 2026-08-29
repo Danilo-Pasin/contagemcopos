@@ -5,8 +5,8 @@ class AppBrand {
   /// Nome principal exibido na home e no título do app.
   static const String name = 'OGS';
 
-  /// Subtítulo/lema exibido na home.
-  static const String tagline = 'Copa da Ressaca';
+  /// Subtítulo/lema exibido na home (abaixo da logo).
+  static const String tagline = 'Copa dos OGS';
 
   /// Descrição curta da festa (splash/SEO).
   static const String description =

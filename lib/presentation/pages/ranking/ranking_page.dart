@@ -222,6 +222,7 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Text(title,
+          textAlign: TextAlign.center,
           style: context.tt.headlineSmall
               ?.copyWith(fontWeight: FontWeight.w800)),
     );
