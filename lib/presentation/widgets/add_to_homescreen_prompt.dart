@@ -95,7 +95,7 @@ class AddToHomescreenSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              const AppLogo(size: 72),
+              const AppLogo(size: 72, background: Colors.black),
               const SizedBox(height: AppSpacing.md),
               Text(
                 'Instale o ${AppBrand.name}',

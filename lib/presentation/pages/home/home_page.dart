@@ -36,10 +36,10 @@ class HomePage extends ConsumerWidget {
         ),
         child: SafeArea(
           child: ResponsiveContent(
-            // Fill-or-scroll: quando sobra altura os blocos são distribuídos
-            // na vertical (espaçamento com mainAxisAlignment); quando o
-            // conteúdo é maior que a altura disponível, o SingleChildScrollView
-            // rola — sem overflow.
+            // Fill-or-scroll compacto: os blocos são distribuídos na vertical
+            // (spaceBetween) quando sobra altura; se o conteúdo for maior que a
+            // altura disponível, o SingleChildScrollView permite rolagem — sem
+            // overflow. Tamanhos reduzidos para caber na tela de um celular.
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final pad = AppSpacing.lg;
@@ -48,15 +48,14 @@ class HomePage extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
                       minHeight: (constraints.maxHeight - pad * 2)
-                          .clamp(0, double.infinity),
+                          .clamp(0.0, double.infinity),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Top bar — só o toggle de tema (a identidade OGS
-                        // fica no bloco logo → OGS → Copa dos OGS)
+                        // Top bar — só o toggle de tema
                         Align(
                           alignment: Alignment.centerRight,
                           child: IconButton(
@@ -74,21 +73,21 @@ class HomePage extends ConsumerWidget {
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const AppLogo(background: Colors.black)
-                                .animate()
-                                .scale(
-                                    duration: Duration(milliseconds: 400),
-                                    curve: Curves.elasticOut,
-                                    begin: const Offset(0.5, 0.5))
-                                .shimmer(delay: AppMotion.fast),
-                            const SizedBox(height: AppSpacing.md),
-                            // OGS — grande, destacado e perto da logo
+                            const AppLogo(
+                              size: 92,
+                              background: Colors.black,
+                            ).animate().scale(
+                                duration: Duration(milliseconds: 400),
+                                curve: Curves.elasticOut,
+                                begin: const Offset(0.5, 0.5),
+                              ).shimmer(delay: AppMotion.fast),
+                            const SizedBox(height: AppSpacing.sm),
                             Text(
                               AppBrand.name,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: fg,
-                                fontSize: 64,
+                                fontSize: 56,
                                 height: 1.05,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 2,
@@ -101,27 +100,27 @@ class HomePage extends ConsumerWidget {
                                   duration: AppMotion.normal,
                                   curve: Curves.easeOut,
                                 ),
-                            const SizedBox(height: AppSpacing.sm),
-                            // Copa dos OGS
+                            const SizedBox(height: AppSpacing.xs),
                             Text(
                               AppBrand.tagline,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: fg.withValues(alpha: 0.85),
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 3,
                               ),
                             )
                                 .animate()
                                 .fadeIn(delay: const Duration(milliseconds: 120)),
-                            const SizedBox(height: AppSpacing.lg),
+                            const SizedBox(height: AppSpacing.md),
                             Text(
-                              'Crie grupos, registre\nsuas bebidas e domine\no ranking 🏆',
+                              'Crie grupos, registre\nsuas bebidas e domine\no '
+                              'ranking 🏆',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: fg,
-                                fontSize: 28,
+                                fontSize: 26,
                                 height: 1.2,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -141,8 +140,8 @@ class HomePage extends ConsumerWidget {
                           children: [
                             Wrap(
                               alignment: WrapAlignment.center,
-                              spacing: AppSpacing.sm,
-                              runSpacing: AppSpacing.sm,
+                              spacing: AppSpacing.xs,
+                              runSpacing: AppSpacing.xs,
                               children: [
                                 _FeaturePill(
                                     emoji: '🍻', label: 'Grupos ilimitados'),
@@ -153,42 +152,43 @@ class HomePage extends ConsumerWidget {
                               ],
                             ).animate().fadeIn(
                                 delay: const Duration(milliseconds: 120)),
-                            const SizedBox(height: AppSpacing.xl),
+                            const SizedBox(height: AppSpacing.md),
                             PrimaryButton(
                               label: 'Criar Grupo',
                               icon: Icons.add_rounded,
                               onPressed: () => context.push(AppRoutes.create),
+                              height: AppButtonSizes.compact,
                             )
                                 .animate()
                                 .fadeIn(
                                     delay: const Duration(milliseconds: 140),
                                     duration: AppMotion.fast)
                                 .slideY(begin: 0.3, duration: AppMotion.normal),
-                            const SizedBox(height: AppSpacing.md),
-                            // Definir código do grupo a entrar
+                            const SizedBox(height: AppSpacing.sm),
                             SecondaryButton(
                               label: 'Entrar em um grupo',
                               icon: Icons.group_add_rounded,
                               onPressed: () => context.push(AppRoutes.enterGroup),
+                              height: AppButtonSizes.compact,
                             )
                                 .animate()
                                 .fadeIn(
                                     delay: const Duration(milliseconds: 170),
                                     duration: AppMotion.fast)
                                 .slideY(begin: 0.3, duration: AppMotion.normal),
-                            const SizedBox(height: AppSpacing.md),
-                            // Já estou num grupo (código + nome + senha)
+                            const SizedBox(height: AppSpacing.sm),
                             SecondaryButton(
                               label: 'Já estou em um grupo',
                               icon: Icons.key_rounded,
                               onPressed: () => context.push(AppRoutes.login),
+                              height: AppButtonSizes.compact,
                             )
                                 .animate()
                                 .fadeIn(
                                     delay: const Duration(milliseconds: 200),
                                     duration: AppMotion.fast)
                                 .slideY(begin: 0.3, duration: AppMotion.normal),
-                            const SizedBox(height: AppSpacing.md),
+                            const SizedBox(height: AppSpacing.sm),
                             if (identity.knownGroups.isNotEmpty)
                               TextButton.icon(
                                 onPressed: () => context.push(

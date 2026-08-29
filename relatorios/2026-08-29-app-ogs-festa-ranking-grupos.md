@@ -100,3 +100,34 @@ conteúdo animado de forma frágil:
 
 ---
 
+# Ajustes de UI mobile + popup de instalação `[Front-end]`
+
+**1. Fundo da logo no popup de instalação (A2HS) preto:** o prompt "Instale o
+OGS" usava o fundo verde da marca ao redor da logo. Agora passa
+`background: Colors.black` em `add_to_homescreen_prompt.dart` (mesma identidade
+da home: bloco preto destacando a marca verde).
+
+**2. Sem rolagem na tela inicial do celular:** o herói da home ficou mais
+compacto para caber de uma vez na tela de um smartphone (mantendo
+`SingleChildScrollView` só como último recurso):
+- Logo `AppLogo` de 120 → **92**;
+- Título **OGS** de 64 → **56**;
+- Lema "Copa dos OGS" de 18 → **16**;
+- Chamada "Crie grupos, registre..." de 28 → **26**;
+- Espaçamentos verticais reduzidos (md → sm/xs entre blocos);
+- Botões primário/secundário de altura **regular (54)** → **compact (44)**
+  (usando `AppButtonSizes.compact`); `SecondaryButton` ganhou o parâmetro
+  `height` para acompanhar o primário.
+
+**Validação (browser console, build debug):** sem overflow e **sem rolagem**
+(`body.scrollHeight == innerHeight`) em **400×613**; o padrão fill-or-scroll
+(validado em 400×748 e 1280×800 na etapa anterior) apenas distribui o espaço
+extra em alturas maiores.
+
+> Nota de validação: a janela/render do ambiente ficou com a largura fixa em
+> ~400 CSS px, então a checagem de desktop desta etapa foi suportada pelo build
+> release + testes (160 ✅) e pelo comportamento já validado do
+> `ResponsiveContent` + fill-or-scroll em telas largas.
+
+---
+

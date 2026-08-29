@@ -109,6 +109,7 @@ class SecondaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
   final double? maxWidth;
+  final double height;
 
   const SecondaryButton({
     super.key,
@@ -116,6 +117,7 @@ class SecondaryButton extends StatelessWidget {
     this.onPressed,
     this.icon,
     this.maxWidth,
+    this.height = AppButtonSizes.regular,
   });
 
   @override
@@ -127,7 +129,7 @@ class SecondaryButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         // Preenche toda a largura (dentro do ConstrainedBox abaixo), assim o
         // secundário fica com o MESMO tamanho do primário.
-        minimumSize: const Size(double.infinity, AppButtonSizes.regular),
+        minimumSize: Size(double.infinity, height),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
