@@ -186,6 +186,16 @@ class _GroupHomePageState extends ConsumerState<GroupHomePage> {
             photoUrl: url,
           );
       if (_mounted) context.showSnack('Foto de perfil atualizada! 📸');
+    } on PostgrestException catch (e) {
+      if (_mounted) {
+        context.showSnack(
+          e.code == 'PGRST116'
+              ? 'Sessão desatualizada. Refaça seu login para atualizar a foto.'
+              : 'Não foi possível atualizar a foto de perfil.',
+          isError: true,
+        );
+      }
+      debugPrint('[GroupHome] falha ao trocar foto de perfil: $e');
     } catch (e) {
       if (_mounted) {
         context.showSnack(

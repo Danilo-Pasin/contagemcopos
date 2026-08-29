@@ -186,11 +186,14 @@ class GroupRepository {
   }
 
   /// Atualiza foto de perfil do participante.
+  ///
+  /// Lança [PostgrestException] (PGRST116) se o RLS bloquear a atualização
+  /// (0 linhas), em vez de falhar silenciosamente.
   Future<void> updateParticipantPhoto(
       String participantId, String photoUrl) async {
     await _client.from('ctg_participants').update({
       'photo_url': photoUrl,
-    }).eq('id', participantId);
+    }).eq('id', participantId).select().single();
   }
 
   /// Arquiva o grupo (somente criador).
