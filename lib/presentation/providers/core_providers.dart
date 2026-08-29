@@ -8,6 +8,7 @@ import '../../data/repositories/drink_repository.dart';
 import '../../data/repositories/group_repository.dart';
 import '../../data/services/identity_service.dart';
 import '../../data/services/storage_service.dart';
+import '../../domain/entities/group_entity.dart';
 
 /// Cliente Supabase singleton.
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
@@ -43,6 +44,14 @@ final drinkRepositoryProvider = Provider<DrinkRepository>((ref) {
 
 final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {
   return AchievementRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Ranking global de grupos (soma de bebidas por grupo). Refrescado no
+/// RankingPage via pull-to-refresh. Bolha única global (não por grupo).
+final groupRankingProvider =
+    FutureProvider<List<GroupRank>>((ref) async {
+  final repo = ref.watch(groupRepositoryProvider);
+  return repo.listGroupRanking();
 });
 
 /// Schema helper (para queries diretas).

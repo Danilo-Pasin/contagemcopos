@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../core/utils/platform_detector.dart';
 import 'app_buttons.dart';
@@ -97,7 +98,7 @@ class AddToHomescreenSheet extends StatelessWidget {
               const AppLogo(size: 72),
               const SizedBox(height: AppSpacing.md),
               Text(
-                'Instale o Contagem',
+                'Instale o ${AppBrand.name}',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,

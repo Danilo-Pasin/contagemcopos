@@ -4,6 +4,34 @@ import '../../domain/entities/participant_entity.dart';
 import '../models/group_model.dart';
 import '../models/participant_model.dart';
 
+/// Agregação pura (testável) do ranking global de grupos.
+///
+/// Recebe as linhas brutas de `ctg_groups` (com `id`, `name`, `cover_emoji`) e
+/// de `ctg_drinks` (com `group_id`) e devolve a soma de bebidas por grupo,
+/// ordenada do maior para o menor. Sem acesso à rede.
+List<GroupRank> aggregateGroupRanking(
+    List<dynamic> groupsData, List<dynamic> drinksData) {
+  final counts = <String, int>{};
+  for (final d in drinksData) {
+    final gid = (d as Map<String, dynamic>)['group_id'] as String?;
+    if (gid == null) continue;
+    counts[gid] = (counts[gid] ?? 0) + 1;
+  }
+
+  final ranks = groupsData.map((g) {
+    final map = g as Map<String, dynamic>;
+    final gid = map['id'] as String;
+    return GroupRank(
+      groupId: gid,
+      name: (map['name'] as String?) ?? 'Grupo',
+      coverEmoji: (map['cover_emoji'] as String?) ?? '🍻',
+      totalDrinks: counts[gid] ?? 0,
+    );
+  }).toList()
+    ..sort((a, b) => b.totalDrinks.compareTo(a.totalDrinks));
+  return ranks;
+}
+
 /// Repositório de grupos e participantes (tabelas ctg_ no schema public).
 class GroupRepository {
   GroupRepository(this._client);
@@ -140,6 +168,21 @@ class GroupRepository {
     return (data as List)
         .map((e) => ParticipantModel(e as Map<String, dynamic>).toEntity())
         .toList();
+  }
+
+  /// Ranking global de grupos: soma de bebidas por grupo (todos os grupos).
+  ///
+  /// Agrega no front (sem objeto no banco): busca os grupos e as linhas de
+  /// bebida (só o group_id) e soma em memória. Como a festa tem poucos grupos
+  /// e dura algumas horas, o volume é baixo e a abordagem dispensa migração.
+  Future<List<GroupRank>> listGroupRanking() async {
+    final groupsData = await _client
+        .from('ctg_groups')
+        .select('id, name, cover_emoji');
+    final drinksData = await _client
+        .from('ctg_drinks')
+        .select('group_id');
+    return aggregateGroupRanking(groupsData as List, drinksData as List);
   }
 
   /// Atualiza foto de perfil do participante.

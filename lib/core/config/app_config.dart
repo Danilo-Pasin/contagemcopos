@@ -1,6 +1,28 @@
+/// Identidade de marca do app (centralizada para fácil renomeação).
+class AppBrand {
+  const AppBrand._();
+
+  /// Nome principal exibido na home e no título do app.
+  static const String name = 'OGS';
+
+  /// Subtítulo/lema exibido na home.
+  static const String tagline = 'Copa da Ressaca';
+
+  /// Descrição curta da festa (splash/SEO).
+  static const String description =
+      'OGS — registre suas bebidas e suba no ranking da festa.';
+}
+
 /// Configuração central do app — credenciais Supabase.
 class AppConfig {
   const AppConfig._();
+
+  /// Janela fixa da festa (início/fim). Usada na criação de grupo, pois nesta
+  /// versão não há seletor de período — a competição dura toda a festa.
+  static DateTime get festaStart =>
+      DateTime(2026, 8, 29, 22, 0); // 29/08/2026 22:00
+
+  static DateTime get festaEnd => DateTime(2026, 8, 30, 6, 0); // 30/08/2026 06:00
 
   static const String supabaseUrl =
       'https://qzfqkldzvoqvxytvaoaa.supabase.co';

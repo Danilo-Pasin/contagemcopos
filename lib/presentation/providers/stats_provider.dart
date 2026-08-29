@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/utils/date_time_x.dart';
 import '../../domain/entities/participant_entity.dart';
 import '../../data/repositories/drink_repository.dart';
 import 'core_providers.dart';
 import 'group_session_provider.dart';
 
-/// Uma barra do gráfico "Bebidas por dia".
-class DailyStat {
-  final String label; // dd/MM
+/// Uma barra do gráfico "Bebidas por hora".
+class HourlyStat {
+  final String label; // ex: "22h"
+  final int hour; // 0-23, para ordenação
   final int value;
-  const DailyStat({required this.label, required this.value});
+  const HourlyStat({required this.label, required this.hour, required this.value});
 }
 
 /// Contagem de um tipo de bebida de uma pessoa.
@@ -34,25 +34,25 @@ class PerPersonTypes {
 
 /// Estado das estatísticas do grupo, com base de TTL ([fetchedAt]).
 class StatsState {
-  final List<DailyStat> daily;
+  final List<HourlyStat> hourly;
   final List<PerPersonTypes> perPerson;
   final bool loading;
   final DateTime? fetchedAt; // base do TTL; null = defasado
   final Object? error;
 
   const StatsState({
-    this.daily = const [],
+    this.hourly = const [],
     this.perPerson = const [],
     this.loading = true,
     this.fetchedAt,
     this.error,
   });
 
-  bool get hasData => daily.isNotEmpty || perPerson.isNotEmpty;
+  bool get hasData => hourly.isNotEmpty || perPerson.isNotEmpty;
 
   /// Cópia com [fetchedAt] zerado (invalidação).
   StatsState markedStale() => StatsState(
-        daily: daily,
+        hourly: hourly,
         perPerson: perPerson,
         loading: loading,
         fetchedAt: null,
@@ -60,7 +60,7 @@ class StatsState {
       );
 
   StatsState copyWith({
-    List<DailyStat>? daily,
+    List<HourlyStat>? hourly,
     List<PerPersonTypes>? perPerson,
     bool? loading,
     DateTime? fetchedAt,
@@ -68,7 +68,7 @@ class StatsState {
     bool clearError = false,
   }) =>
       StatsState(
-        daily: daily ?? this.daily,
+        hourly: hourly ?? this.hourly,
         perPerson: perPerson ?? this.perPerson,
         loading: loading ?? this.loading,
         fetchedAt: fetchedAt ?? this.fetchedAt,
@@ -80,11 +80,11 @@ class StatsState {
 ///
 /// Linhas com `created_at` inválido são ignoradas (parsing defensivo).
 /// Participantes ausentes no ranking caem para o nome genérico.
-({List<DailyStat> daily, List<PerPersonTypes> perPerson}) aggregateDrinkRows(
+({List<HourlyStat> hourly, List<PerPersonTypes> perPerson}) aggregateDrinkRows(
   List<Map<String, dynamic>> rows,
   List<ParticipantEntity> ranking,
 ) {
-  final byDay = <String, int>{};
+  final byHour = <int, int>{};
   // participante -> tipo -> quantidade
   final personMap = <String, Map<String, int>>{};
   for (final row in rows) {
@@ -92,22 +92,16 @@ class StatsState {
     final dt = raw is String ? DateTime.tryParse(raw) : null;
     if (dt == null) continue;
     final local = dt.toLocal();
-    final key = DateTimeX.shortDate(local);
-    byDay[key] = (byDay[key] ?? 0) + 1;
+    final hour = local.hour;
+    byHour[hour] = (byHour[hour] ?? 0) + 1;
     final type = (row['drink_type'] as String?) ?? 'sem_tipo';
     final pid = (row['participant_id'] as String?) ?? 'sem_participante';
     final inner = personMap.putIfAbsent(pid, () => {});
     inner[type] = (inner[type] ?? 0) + 1;
   }
 
-  final dailyEntries = byDay.entries.toList()
-    ..sort((a, b) {
-      final aP = a.key.split('/');
-      final bP = b.key.split('/');
-      final byMonth = int.parse(aP[1]).compareTo(int.parse(bP[1]));
-      if (byMonth != 0) return byMonth;
-      return int.parse(aP[0]).compareTo(int.parse(bP[0]));
-    });
+  final hourlyEntries = byHour.entries.toList()
+    ..sort((a, b) => a.key.compareTo(b.key));
 
   final perPerson = personMap.entries.map((e) {
     final participant = ranking.where((p) => p.id == e.key).firstOrNull;
@@ -124,8 +118,9 @@ class StatsState {
     ..sort((a, b) => b.total.compareTo(a.total));
 
   return (
-    daily: [
-      for (final e in dailyEntries) DailyStat(label: e.key, value: e.value)
+    hourly: [
+      for (final e in hourlyEntries)
+        HourlyStat(label: '${e.key}h', hour: e.key, value: e.value)
     ],
     perPerson: perPerson,
   );
@@ -181,7 +176,7 @@ class StatsNotifier extends StateNotifier<StatsState> {
       final rows = await _fetchRows(groupId);
       final agg = aggregateDrinkRows(rows, _currentRanking());
       state = StatsState(
-        daily: agg.daily,
+        hourly: agg.hourly,
         perPerson: agg.perPerson,
         loading: false,
         fetchedAt: _now(),

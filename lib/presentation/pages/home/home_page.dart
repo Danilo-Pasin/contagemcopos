@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../widgets/add_to_homescreen_prompt.dart';
@@ -49,7 +50,7 @@ class HomePage extends ConsumerWidget {
                         children: [
                           const SizedBox(width: 40),
                           Text(
-                            'Contagem',
+                            AppBrand.name,
                             style: TextStyle(
                               color: fg,
                               fontWeight: FontWeight.w800,
@@ -80,7 +81,7 @@ class HomePage extends ConsumerWidget {
                           .shimmer(delay: AppMotion.fast),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
-                        'Copa das Bebidas',
+                        AppBrand.tagline,
                         style: TextStyle(
                           color: fg.withValues(alpha: 0.7),
                           fontSize: 16,

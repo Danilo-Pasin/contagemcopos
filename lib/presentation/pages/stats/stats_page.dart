@@ -99,7 +99,7 @@ class StatsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Bebidas por dia',
+                  Text('Bebidas por hora',
                       style: context.tt.titleSmall
                           ?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: AppSpacing.md),
@@ -107,9 +107,9 @@ class StatsPage extends ConsumerWidget {
                     height: 180,
                     child: stats.loading && !stats.hasData
                         ? const Center(child: CircularProgressIndicator())
-                        : stats.daily.isEmpty
+                        : stats.hourly.isEmpty
                             ? const Center(child: Text('Sem registros'))
-                            : _DailyChart(data: stats.daily),
+                            : _HourlyChart(data: stats.hourly),
                   ),
                 ],
               ),
@@ -198,9 +198,9 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
-class _DailyChart extends StatelessWidget {
-  final List<DailyStat> data;
-  const _DailyChart({required this.data});
+class _HourlyChart extends StatelessWidget {
+  final List<HourlyStat> data;
+  const _HourlyChart({required this.data});
 
   @override
   Widget build(BuildContext context) {
@@ -218,9 +218,13 @@ class _DailyChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              reservedSize: 24,
               getTitlesWidget: (v, _) {
                 final i = v.toInt();
                 if (i < 0 || i >= data.length) return const SizedBox();
+                // Mostra rótulo a cada 2 horas para não poluir o eixo X.
+                final hour = data[i].hour;
+                if (hour % 2 != 0) return const SizedBox();
                 return Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(data[i].label,

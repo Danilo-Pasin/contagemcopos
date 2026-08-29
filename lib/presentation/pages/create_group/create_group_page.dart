@@ -4,11 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/constants/competition_periods.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/constants/title_system.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../core/utils/date_time_x.dart';
 import '../../providers/core_providers.dart';
 import '../../providers/identity_provider.dart';
 import '../../widgets/app_avatar.dart';
@@ -27,13 +28,6 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
   final _groupNameCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final _customValueCtrl = TextEditingController(text: '1');
-  final _goalCtrl = TextEditingController(text: '12');
-  CompetitionPeriod? _period;
-  bool _customMode = false;
-  int _customValue = 1;
-  DurationUnit _customUnit = DurationUnit.days;
-  bool _goalEnabled = false;
   bool _obscurePass = true;
   String? _photoUrl;
   String _coverEmoji = '🍻';
@@ -41,62 +35,10 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
 
   static const _emojis = ['🍻', '🍺', '🍷', '🥃', '🍹', '🥂', '🍾', '🍸'];
 
-  /// Período em vigor (personalizado construído na hora ou um preset escolhido).
-  CompetitionPeriod? get _chosen {
-    if (_customMode) {
-      return CompetitionPeriod(
-        id: 'custom',
-        label: 'Personalizado',
-        value: _customValue,
-        unit: _customUnit,
-      );
-    }
-    return _period;
-  }
-
-  Duration get _chosenDuration {
-    final c = _chosen;
-    if (c == null) return Duration.zero;
-    return Duration(hours: c.totalHours);
-  }
-
-  int get _durationDays {
-    final c = _chosen;
-    if (c == null || c.totalHours <= 0) return 0;
-    return (c.totalHours / 24).round().clamp(1, 999999);
-  }
-
-  int get _maxGoal => _goalEnabled ? _goalValue : kNoGoalMaxGoal;
-
-  /// Valor digitado pelo usuário para a meta (quando "por meta").
-  int get _goalValue => int.tryParse(_goalCtrl.text.trim()) ?? 0;
-
-  String get _durationLabel {
-    final c = _chosen;
-    if (c == null) return '';
-    switch (c.unit) {
-      case DurationUnit.hours:
-        return '${c.value} horas';
-      case DurationUnit.days:
-        return c.value == 1 ? '1 dia' : '${c.value} dias';
-      case DurationUnit.months:
-        return c.value == 1 ? '1 mês' : '${c.value} meses';
-    }
-  }
-
-  double get _drinksPerDay {
-    final c = _chosen;
-    if (c == null || c.totalHours <= 0) return 0;
-    return c.maxGoal / (c.totalHours / 24);
-  }
-
   bool get _canCreate =>
       _groupNameCtrl.text.trim().isNotEmpty &&
       _nameCtrl.text.trim().isNotEmpty &&
       _passCtrl.text.length >= 5 &&
-      _durationDays > 0 &&
-      _customValue > 0 &&
-      (!_goalEnabled || _goalValue > 0) &&
       !_creating;
 
   @override
@@ -104,8 +46,6 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
     _groupNameCtrl.dispose();
     _nameCtrl.dispose();
     _passCtrl.dispose();
-    _customValueCtrl.dispose();
-    _goalCtrl.dispose();
     super.dispose();
   }
 
@@ -138,16 +78,17 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
       final anonId = await identity.ensureReady();
       final groupRepo = ref.read(groupRepositoryProvider);
 
-      final now = DateTime.now();
-      final end = now.add(_chosenDuration);
+      // Janela fixa da festa (sem seletor de período nesta versão).
+      final start = AppConfig.festaStart;
+      final end = AppConfig.festaEnd;
 
       final group = await groupRepo.createGroup(
         anonId: anonId,
         name: _groupNameCtrl.text.trim(),
-        startDate: now,
+        startDate: start,
         endDate: end,
-        durationDays: _durationDays,
-        maxGoal: _maxGoal,
+        durationDays: (end.difference(start).inHours / 24).round().clamp(1, 999999),
+        maxGoal: kNoGoalMaxGoal,
         coverEmoji: _coverEmoji,
       );
 
@@ -237,163 +178,32 @@ class _CreateGroupPageState extends ConsumerState<CreateGroupPage> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              _SectionTitle('Período da competição'),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  ...CompetitionPeriod.presets.map((p) {
-                    final selected = _period?.id == p.id && !_customMode;
-                    return ChoiceChip(
-                      label: Text(p.label),
-                      selected: selected,
-                      onSelected: (_) =>
-                          setState(() {
-                        _period = p;
-                        _customMode = false;
-                      }),
-                    );
-                  }),
-                  ChoiceChip(
-                    label: const Text('📅 Personalizado'),
-                    selected: _customMode,
-                    onSelected: (sel) {
-                      setState(() {
-                        _customMode = sel;
-                        if (sel) _period = null;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              if (_customMode) ...[
-                const SizedBox(height: AppSpacing.md),
-                GlassCard(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'Defina seu período',
-                        style: context.tt.titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
+              // Duração fixa da festa (sem seletor de período).
+              GlassCard(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    const Text('⏰', style: TextStyle(fontSize: 28)),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _customValueCtrl,
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: 'Quantidade',
-                                prefixIcon: Icon(Icons.numbers_rounded),
-                              ),
-                              onChanged: (v) => setState(() {
-                                _customValue =
-                                    int.tryParse(v.trim()) ?? 0;
-                              }),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: DropdownButtonFormField<DurationUnit>(
-                              initialValue: _customUnit,
-                              decoration: const InputDecoration(
-                                labelText: 'Unidade',
-                                prefixIcon: Icon(Icons.schedule_rounded),
-                              ),
-                              items: DurationUnit.values
-                                  .map((u) => DropdownMenuItem(
-                                        value: u,
-                                        child: Text(u.pluralLabel),
-                                      ))
-                                  .toList(),
-                              onChanged: (u) {
-                                if (u == null) return;
-                                setState(() => _customUnit = u);
-                              },
-                            ),
+                          Text('Duração da festa',
+                              style: context.tt.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700)),
+                          Text(
+                            'Início ${DateTimeX.format(AppConfig.festaStart, pattern: 'dd/MM HH:mm')} · '
+                            'Fim ${DateTimeX.format(AppConfig.festaEnd, pattern: 'dd/MM HH:mm')}',
+                            style: context.tt.bodySmall?.copyWith(
+                                color: context.cs.onSurfaceVariant),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-              ],
-              if (_chosen != null && _durationDays > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.md),
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Row(
-                      children: [
-                        Text(_goalEnabled ? '🎯' : '🆓',
-                            style: const TextStyle(fontSize: 28)),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _goalEnabled
-                                    ? 'Meta por pessoa: $_goalValue bebidas'
-                                    : 'Sem meta definida',
-                                style: context.tt.titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              Text(
-                                '$_durationLabel · '
-                                '${_drinksPerDay.toStringAsFixed(1)} beb/dia',
-                                style: context.tt.bodySmall?.copyWith(
-                                    color: context.cs.onSurfaceVariant),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
+                  ],
                 ),
-              const SizedBox(height: AppSpacing.lg),
-
-              _SectionTitle('Meta da competição'),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  ChoiceChip(
-                    label: const Text('🆓 Sem meta'),
-                    selected: !_goalEnabled,
-                    onSelected: (_) => setState(() => _goalEnabled = false),
-                  ),
-                  ChoiceChip(
-                    label: const Text('🎯 Por meta'),
-                    selected: _goalEnabled,
-                    onSelected: (_) => setState(() => _goalEnabled = true),
-                  ),
-                ],
               ),
-              if (_goalEnabled) ...[
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: _goalCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Meta por pessoa (bebidas)',
-                    prefixIcon: Icon(Icons.flag_outlined),
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Os títulos (Aprendiz, Cachaceiro…) são calculados como '
-                  'faixas dessa meta. Sem meta, usamos uma referência fixa.',
-                  style: context.tt.bodySmall?.copyWith(
-                      color: context.cs.onSurfaceVariant),
-                ),
-              ],
               const SizedBox(height: AppSpacing.xl),
 
               _SectionTitle('Seu perfil'),

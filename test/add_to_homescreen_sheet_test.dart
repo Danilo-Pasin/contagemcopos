@@ -12,7 +12,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(_host(const AddToHomescreenSheet(iosSafari: true)));
 
-      expect(find.text('Instale o Contagem'), findsOneWidget);
+      expect(find.text('Instale o OGS'), findsOneWidget);
       expect(find.text('Toque no botão Compartilhar'), findsOneWidget);
       expect(find.text('Role e toque em "Adicionar à Tela de Início"'),
           findsOneWidget);

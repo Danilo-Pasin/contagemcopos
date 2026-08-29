@@ -22,20 +22,26 @@ void main() {
   setUpAll(() => initializeDateFormatting('pt_BR', null));
 
   group('aggregateDrinkRows — agregação pura', () {
-    test('agrega por dia e ordena cronologicamente (dias fora de ordem)', () {
+    test('agrega por hora e ordena cronologicamente (horas fora de ordem)',
+        () {
       final rows = [
         _row(createdAt: '2026-08-10T12:00:00Z'),
-        _row(createdAt: '2026-07-28T12:00:00Z'),
         _row(createdAt: '2026-08-10T15:00:00Z'),
-        _row(createdAt: '2026-08-05T09:00:00Z'),
+        _row(createdAt: '2026-08-10T09:00:00Z'),
+        _row(createdAt: '2026-08-10T12:30:00Z'), // mesma hora → soma
       ];
       final agg = aggregateDrinkRows(rows, [_participant('p1', 'Ana')]);
-      expect(agg.daily.map((d) => d.label).toList(), [
-        '28/07',
-        '05/08',
-        '10/08',
-      ]);
-      expect(agg.daily.last.value, 2);
+      // Horas locais esperadas (independente de fuso), ordenadas.
+      final expectedHours = rows
+          .map((r) => DateTime.parse(r['created_at'] as String).toLocal().hour)
+          .toSet()
+          .toList()
+        ..sort();
+      expect(agg.hourly.map((d) => d.hour).toList(), expectedHours);
+      // Soma total = 4; a primeira das duas ocorrências da hora duplicada = 2.
+      expect(agg.hourly.map((d) => d.value).fold<int>(0, (a, b) => a + b), 4);
+      final dup = agg.hourly.firstWhere((d) => d.value == 2);
+      expect(dup.value, 2);
     });
 
     test('created_at inválido é ignorado sem quebrar a agregação', () {
@@ -45,8 +51,8 @@ void main() {
         _row(createdAt: ''), // vazio
       ];
       final agg = aggregateDrinkRows(rows, []);
-      expect(agg.daily.length, 1);
-      expect(agg.daily.single.value, 1);
+      expect(agg.hourly.length, 1);
+      expect(agg.hourly.single.value, 1);
     });
 
     test('participante ausente no ranking cai para nome genérico', () {

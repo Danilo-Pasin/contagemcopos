@@ -1,5 +1,19 @@
 enum GroupStatus { active, ended, archived, unknown }
 
+/// Entrada do ranking global de grupos (soma de bebidas por grupo).
+class GroupRank {
+  final String groupId;
+  final String name;
+  final String coverEmoji;
+  final int totalDrinks;
+  const GroupRank({
+    required this.groupId,
+    required this.name,
+    required this.coverEmoji,
+    required this.totalDrinks,
+  });
+}
+
 /// Entidade de domínio: Grupo de competição.
 class GroupEntity {
   final String id;
