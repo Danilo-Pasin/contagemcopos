@@ -72,3 +72,31 @@ lado" do ranking **nunca** era ativado.
 - `test/app_config_test.dart` atualizado para o novo lema.
 
 ---
+
+# Correção: overflow do hero na home (mobile pequeno) `[Front-end]`
+
+**Bug:** em ~400x748 o `RenderFlex` estourava em **4px** (detectado no console
+do navegador no build debug, aplicação rodando em 400x748).
+
+**Causa raiz:** duas tentativas anteriores ainda mediam o conteúdo de forma
+insuficiente:
+- `CustomScrollView` + `SliverFillRemaining` não rolava o herói corretamente;
+- `IntrinsicHeight` + `Spacer` **submediava o conteúdo animado** e ainda
+  estourava 4px.
+
+**Correção em `home_page.dart`:** padrão **fill-or-scroll** robusto, sem medir
+conteúdo animado de forma frágil:
+- `LayoutBuilder` para obter a altura real disponível;
+- `SingleChildScrollView` (scroll vertical de verdade quando faltar espaço);
+- `ConstrainedBox(minHeight: maxHeight - padding)` para preencher a tela quando
+  há folga;
+- `Column(mainAxisSize: min, mainAxisAlignment: spaceBetween,
+  crossAxisAlignment: stretch)` com 3 blocos (toggle / identidade central /
+  pills e botões), permitindo rolagem quando o conteúdo excede a altura.
+
+**Validação (browser console, build debug):** sem mensagem de overflow em
+**400x748** nem em **1280x800** (antes o log de `RenderFlex overflowed by
+4.0 pixels` aparecia).
+
+---
+
